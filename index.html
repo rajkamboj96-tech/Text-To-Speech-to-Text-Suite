@@ -11,7 +11,7 @@
     <style>
         /* --- GLOBAL & VARIABLES --- */
         :root {
-            var(--tts-primary): #4285f4; 
+            --tts-primary: #4285f4; 
             --tts-secondary: #ea4335; 
             --tts-highlight: #cce5ff; 
             --tts-highlight-text: #004085; 
@@ -35,18 +35,42 @@
             overflow-x: hidden;
         }
 
-        .screen { display: none; width: 100vw; min-height: 100vh; box-sizing: border-box; position: relative; }
-        .screen.active { display: flex; }
+        /* --- SCREEN ROUTING --- */
+        .screen {
+            display: none;
+            width: 100vw;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .screen.active {
+            display: flex;
+        }
 
         .back-btn {
-            position: absolute; top: 15px; left: 15px; background: #343a40; color: white;
-            border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer;
-            font-weight: bold; z-index: 1000; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #343a40;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1000;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         .back-btn:hover { background: #1d2124; transform: scale(1.05); }
 
         /* --- HOME SCREEN --- */
-        #home-screen { flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+        #home-screen {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
         .home-title { font-size: 2.5rem; color: #2c3e50; margin-bottom: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); text-align: center; }
         .home-subtitle { font-size: 1.1rem; color: #7f8c8d; margin-bottom: 30px; text-align: center; }
         .card-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 10px; width: 100%; box-sizing: border-box; }
@@ -58,7 +82,7 @@
         }
         .tool-card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
         .tool-card.stt-card:hover { border-bottom-color: var(--stt-success); }
-        .tool-card.tts-card:hover { border-bottom-color: #4285f4; }
+        .tool-card.tts-card:hover { border-bottom-color: var(--tts-primary); }
         .card-icon { font-size: 3.5rem; margin-bottom: 15px; }
         .card-title { font-size: 1.4rem; font-weight: bold; margin: 0; color: #333; }
 
@@ -88,7 +112,7 @@
         /* --- TTS SCREEN --- */
         #tts-screen { justify-content: center; align-items: center; background: var(--tts-bg); color: var(--tts-text); padding: 60px 20px 20px 20px; }
         .tts-container { background-color: var(--tts-container-bg); padding: 30px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.12); width: 100%; max-width: 650px; }
-        .tts-container h1 { text-align: center; margin-bottom: 25px; font-size: 1.6rem; color: #4285f4; margin-top:0;}
+        .tts-container h1 { text-align: center; margin-bottom: 25px; font-size: 1.6rem; color: var(--tts-primary); margin-top:0;}
         .tts-toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
         .tts-toolbar button { flex: 1; padding: 8px; font-size: 0.9rem; background-color: #f1f3f4; color: #3c4043; border: 1px solid #dadce0; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
         .tts-toolbar button:hover { background-color: #e8eaed; }
@@ -109,8 +133,8 @@
         .tts-slider-value { width: 30px; text-align: right; font-size: 0.9rem; color: #5f6368; font-weight: bold; }
         .tts-button-group { display: flex; gap: 10px; margin-top: 20px; }
         button.tts-action-btn { flex: 1; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; color: white; transition: opacity 0.3s; }
-        #tts-speak-btn { background-color: #4285f4; }
-        #tts-stop-btn { background-color: #ea4335; }
+        #tts-speak-btn { background-color: var(--tts-primary); }
+        #tts-stop-btn { background-color: var(--tts-secondary); }
         button.tts-action-btn:hover { opacity: 0.9; }
         button.tts-action-btn:disabled { background-color: #bdc3c7; cursor: not-allowed; opacity: 1; }
         .tts-status { margin-top: 15px; text-align: center; font-size: 0.95rem; color: #5f6368; font-weight: 500; min-height: 20px; }
@@ -254,7 +278,6 @@
     </div>
 
     <script>
-        // PDF.js worker fallback fix for GitHub Pages
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
 
         let globalStopSTT = () => {};
@@ -293,7 +316,7 @@
                 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
                 
                 if (!SpeechRecognitionAPI) {
-                    status.innerText = "Error: Browser does not support Speech Recognition. Try Chrome.";
+                    status.innerText = "Error: Browser does not support Speech Recognition.";
                     status.style.color = "red";
                     startBtn.disabled = true;
                 } else {
@@ -322,15 +345,10 @@
                         startBtn.classList.remove('recording'); startBtn.innerText = "Start";
                     };
 
-                    // Handle Mic Permission Errors on GitHub Pages
                     recognition.onerror = (event) => {
-                        console.error("Speech Error: ", event.error);
                         if (event.error === 'not-allowed') {
-                            alert("Microphone access was denied! Please click the 'Lock' icon next to the URL bar and 'Allow' microphone access.");
-                            status.innerText = "Error: Microphone permission denied.";
-                            status.style.color = "red";
-                        } else if (event.error === 'network') {
-                            status.innerText = "Error: Network issue. Check internet connection.";
+                            alert("Microphone access denied! Allow microphone in browser settings.");
+                            status.innerText = "Error: Mic denied.";
                         }
                     };
 
@@ -355,39 +373,25 @@
                     undoBtn.onclick = () => { if (history.length > 0) { redoStack.push(history.pop()); renderLog(); } };
                     redoBtn.onclick = () => { if (redoStack.length > 0) { history.push(redoStack.pop()); renderLog(); } };
                     clearBtn.onclick = () => { if (confirm("Clear all?")) { history = []; redoStack = []; renderLog(); } };
-
-                    copyBtn.onclick = () => {
-                        const content = isEditing ? editTextarea.value : history.join('\n');
-                        navigator.clipboard.writeText(content).then(() => {
-                            const oldText = copyBtn.innerText; copyBtn.innerText = "Done";
-                            setTimeout(() => copyBtn.innerText = oldText, 1000);
-                        }).catch(err => alert("Copy failed. Please copy manually."));
-                    };
-
+                    copyBtn.onclick = () => { navigator.clipboard.writeText(isEditing ? editTextarea.value : history.join('\n')); };
                     downloadBtn.onclick = () => {
                         const content = isEditing ? editTextarea.value : history.join('\n');
-                        const BOM = "\uFEFF";
-                        const blob = new Blob([BOM + content], { type: 'text/plain;charset=utf-8' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url; a.download = `voice-log-${new Date().toLocaleDateString()}.txt`;
-                        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+                        const blob = new Blob(["\uFEFF" + content], { type: 'text/plain;charset=utf-8' });
+                        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); 
+                        a.download = `voice-log.txt`; a.click();
                     };
 
                     function renderLog() {
                         log.innerHTML = '';
                         history.forEach(item => {
-                            const div = document.createElement('div');
-                            div.className = 'log-entry'; div.textContent = item;
+                            const div = document.createElement('div'); div.className = 'log-entry'; div.textContent = item;
                             if(langSelect.value === 'ur-PK') div.style.textAlign = 'right';
                             log.appendChild(div);
                         });
                         log.scrollTop = log.scrollHeight;
                     }
 
-                    startBtn.onclick = () => {
-                        try { recognition.start(); } catch(e) { console.warn("Already started"); }
-                    };
+                    startBtn.onclick = () => { try { recognition.start(); } catch(e) {} };
                     stopBtn.onclick = () => recognition.stop();
                 }
 
@@ -404,97 +408,44 @@
                 const stopBtn = document.getElementById('tts-stop-btn');
                 const statusMessage = document.getElementById('tts-status-message');
                 const pitchSlider = document.getElementById('tts-pitch-slider');
-                const pitchValue = document.getElementById('tts-pitch-value');
                 const rateSlider = document.getElementById('tts-rate-slider');
-                const rateValue = document.getElementById('tts-rate-value');
-                const engineRadios = document.getElementsByName('tts-voice-engine');
-                const pitchContainer = document.getElementById('tts-pitch-container');
-                const openBtn = document.getElementById('tts-open-btn');
-                const fileInput = document.getElementById('tts-file-input');
-                const pasteBtn = document.getElementById('tts-paste-btn');
-                const clearBtn = document.getElementById('tts-clear-btn');
-
-                let currentAudio = null; let audioQueue = []; const synth = window.speechSynthesis;
+                
+                // GLOBAL AUDIO PLAYER (Fix for Autoplay Policy)
+                const globalAudioPlayer = new Audio();
+                let audioQueue = []; 
+                const synth = window.speechSynthesis;
 
                 function setReadingMode(isActive) {
-                    if (isActive) {
-                        textInput.style.display = 'none'; readingDisplay.style.display = 'block';
-                    } else {
-                        textInput.style.display = 'block'; readingDisplay.style.display = 'none'; readingDisplay.innerHTML = '';
-                    }
+                    if (isActive) { textInput.style.display = 'none'; readingDisplay.style.display = 'block'; } 
+                    else { textInput.style.display = 'block'; readingDisplay.style.display = 'none'; readingDisplay.innerHTML = ''; }
                 }
 
-                function updateEngineUI() {
-                    const isGoogle = document.querySelector('input[name="tts-voice-engine"]:checked').value === 'google';
-                    pitchSlider.disabled = isGoogle; pitchContainer.style.opacity = isGoogle ? '0.5' : '1';
-                }
-
-                engineRadios.forEach(radio => radio.addEventListener('change', updateEngineUI));
-                pitchSlider.addEventListener('input', () => pitchValue.textContent = parseFloat(pitchSlider.value).toFixed(1));
-                rateSlider.addEventListener('input', () => rateValue.textContent = parseFloat(rateSlider.value).toFixed(1));
-
-                openBtn.addEventListener('click', () => fileInput.click());
+                document.getElementById('tts-open-btn').addEventListener('click', () => document.getElementById('tts-file-input').click());
                 
-                fileInput.addEventListener('change', async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-
-                    statusMessage.textContent = `Loading ${file.name}... Please wait.`;
-                    statusMessage.style.color = "#ea4335"; 
-
+                document.getElementById('tts-file-input').addEventListener('change', async (e) => {
+                    const file = e.target.files[0]; if (!file) return;
+                    statusMessage.textContent = `Loading ${file.name}...`;
                     try {
                         const fileType = file.name.split('.').pop().toLowerCase();
-
                         if (fileType === 'txt') {
-                            const reader = new FileReader();
-                            reader.onload = (e) => { textInput.value = e.target.result; finishLoading(); };
-                            reader.readAsText(file);
-                        } 
-                        else if (fileType === 'pdf') {
-                            const arrayBuffer = await file.arrayBuffer();
-                            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                            let text = "";
-                            for (let i = 1; i <= pdf.numPages; i++) {
-                                const page = await pdf.getPage(i);
-                                const content = await page.getTextContent();
-                                const strings = content.items.map(item => item.str);
-                                text += strings.join(" ") + "\n";
-                            }
-                            textInput.value = text;
-                            finishLoading();
-                        } 
-                        else if (fileType === 'docx' || fileType === 'doc') {
-                            const arrayBuffer = await file.arrayBuffer();
-                            const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-                            textInput.value = result.value;
-                            finishLoading();
-                        } 
-                        else {
-                            alert("Unsupported file type. Please upload .txt, .pdf, or .docx");
-                            statusMessage.textContent = "Error: Unsupported file type.";
+                            const reader = new FileReader(); reader.onload = (e) => { textInput.value = e.target.result; statusMessage.textContent="Ready"; }; reader.readAsText(file);
+                        } else if (fileType === 'pdf') {
+                            const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                            let text = ""; for (let i = 1; i <= pdf.numPages; i++) { const page = await pdf.getPage(i); const content = await page.getTextContent(); text += content.items.map(item => item.str).join(" ") + "\n"; }
+                            textInput.value = text; statusMessage.textContent="Ready";
+                        } else if (fileType === 'docx' || fileType === 'doc') {
+                            const arrayBuffer = await file.arrayBuffer(); const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                            textInput.value = result.value; statusMessage.textContent="Ready";
                         }
-                    } catch (error) {
-                        console.error("File Error:", error);
-                        alert("Could not read the file. Ensure it is a valid PDF or Word document.");
-                        statusMessage.textContent = "Error extracting text.";
-                    }
-                    fileInput.value = ''; 
+                    } catch (error) { statusMessage.textContent = "Error extracting text."; }
+                    e.target.value = ''; 
                 });
 
-                function finishLoading() {
-                    statusMessage.textContent = "Document loaded! Ready to speak.";
-                    statusMessage.style.color = "#5f6368";
-                }
-
-                pasteBtn.addEventListener('click', async () => {
-                    try { const text = await navigator.clipboard.readText(); textInput.value += text; } 
-                    catch (err) { alert('Clipboard permission denied by browser. Please paste manually.'); }
-                });
-
-                clearBtn.addEventListener('click', () => { textInput.value = ''; stopSpeaking(); });
+                document.getElementById('tts-paste-btn').addEventListener('click', async () => { try { textInput.value += await navigator.clipboard.readText(); } catch (err) {} });
+                document.getElementById('tts-clear-btn').addEventListener('click', () => { textInput.value = ''; stopSpeaking(); });
 
                 function stopSpeaking() {
-                    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+                    globalAudioPlayer.pause(); globalAudioPlayer.src = ""; // Stop audio completely
                     audioQueue = []; synth.cancel(); setReadingMode(false); 
                     statusMessage.textContent = 'Stopped'; speakBtn.disabled = false; stopBtn.disabled = true;
                 }
@@ -503,25 +454,17 @@
                 globalStopTTS = stopSpeaking;
 
                 function splitIntoSmartSentences(text) {
-                    let txt = text;
-                    txt = txt.replace(/(\d)\.(\d)/g, '$1<DOT>$2');
-                    txt = txt.replace(/(\b\d{1,3})\./g, '$1<DOT>');
-                    txt = txt.replace(/(\b[a-zA-Z])\./g, '$1<DOT>');
+                    let txt = text.replace(/(\d)\.(\d)/g, '$1<DOT>$2').replace(/(\b\d{1,3})\./g, '$1<DOT>').replace(/(\b[a-zA-Z])\./g, '$1<DOT>');
                     const abbrs = ['mr', 'mrs', 'ms', 'dr', 'prof', 'sr', 'jr', 'st', 'ed', 'ph', 'rs', 'govt', 'ltd', 'inc', 'co'];
-                    const abbrRegex = new RegExp(`\\b(${abbrs.join('|')})\\.`, 'gi');
-                    txt = txt.replace(abbrRegex, '$1<DOT>');
-
+                    txt = txt.replace(new RegExp(`\\b(${abbrs.join('|')})\\.`, 'gi'), '$1<DOT>');
                     const rawChunks = txt.match(/[^.?!।\n]+[.?!।\n]*/g) || [txt];
                     let processedChunks = [];
-                    
                     rawChunks.forEach(chunk => {
                         let cleanChunk = chunk.replace(/<DOT>/g, '.').trim();
                         if (cleanChunk.length > 0) {
                             if (cleanChunk.length > 180) {
-                                let words = cleanChunk.split(' '); let tempStr = '';
-                                words.forEach(word => {
-                                    if ((tempStr + word).length < 170) { tempStr += word + ' '; } 
-                                    else { processedChunks.push(tempStr.trim()); tempStr = word + ' '; }
+                                let tempStr = ''; cleanChunk.split(' ').forEach(word => {
+                                    if ((tempStr + word).length < 170) { tempStr += word + ' '; } else { processedChunks.push(tempStr.trim()); tempStr = word + ' '; }
                                 });
                                 if (tempStr.trim().length > 0) processedChunks.push(tempStr.trim());
                             } else { processedChunks.push(cleanChunk); }
@@ -533,54 +476,51 @@
                 function playNextChunk() {
                     if (audioQueue.length === 0) {
                         statusMessage.textContent = 'Finished reading entire document.';
-                        speakBtn.disabled = false; stopBtn.disabled = true;
-                        setTimeout(() => setReadingMode(false), 1500); return;
+                        speakBtn.disabled = false; stopBtn.disabled = true; setTimeout(() => setReadingMode(false), 1500); return;
                     }
 
                     const currentItem = audioQueue.shift();
-                    const textChunk = currentItem.text; const spanId = currentItem.id;
                     const lang = languageSelect.value;
                     const engine = document.querySelector('input[name="tts-voice-engine"]:checked').value;
                     
                     document.querySelectorAll('#tts-reading-display span').forEach(el => el.classList.remove('highlight-active'));
-                    const activeElement = document.getElementById(spanId);
+                    const activeElement = document.getElementById(currentItem.id);
                     if (activeElement) {
                         activeElement.classList.add('highlight-active');
                         activeElement.scrollIntoView({ behavior: "smooth", block: "center" });
                     }
 
                     if (engine === 'google') {
-                        const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${lang}&q=${encodeURIComponent(textChunk)}`;
-                        currentAudio = new Audio(url);
-                        currentAudio.playbackRate = parseFloat(rateSlider.value);
+                        const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${lang}&q=${encodeURIComponent(currentItem.text)}`;
+                        globalAudioPlayer.src = url;
+                        globalAudioPlayer.playbackRate = parseFloat(rateSlider.value);
                         
-                        currentAudio.onplay = () => { statusMessage.textContent = `🔊 Speaking... [${audioQueue.length} chunks left]`; };
-                        currentAudio.onended = () => { setTimeout(playNextChunk, 300); };
-                        currentAudio.onerror = () => { console.warn("Audio chunk failed..."); setTimeout(playNextChunk, 300); };
+                        globalAudioPlayer.onplay = () => { statusMessage.textContent = `🔊 Speaking... [${audioQueue.length} chunks left]`; };
+                        globalAudioPlayer.onended = () => { setTimeout(playNextChunk, 300); };
+                        globalAudioPlayer.onerror = () => { setTimeout(playNextChunk, 300); };
 
-                        currentAudio.play().catch(e => { 
-                            console.error("Audio blocked.", e); 
-                            alert("Audio playback was blocked by the browser. Try interacting with the page first.");
+                        globalAudioPlayer.play().catch(e => { 
+                            console.error("Audio Blocked:", e);
+                            alert("Audio playback was blocked. This is a browser security rule. Try clicking 'Speak' again.");
                             stopSpeaking(); 
                         });
                     } 
                     else {
-                        const utterance = new SpeechSynthesisUtterance(textChunk);
+                        const utterance = new SpeechSynthesisUtterance(currentItem.text);
                         utterance.lang = lang === 'en' ? 'en-US' : lang + '-IN';
                         utterance.pitch = parseFloat(pitchSlider.value);
                         utterance.rate = parseFloat(rateSlider.value);
 
-                        utterance.onstart = () => { statusMessage.textContent = `🔊 Speaking Offline... [${audioQueue.length} chunks left]`; };
+                        utterance.onstart = () => { statusMessage.textContent = `🔊 Speaking Offline...`; };
                         utterance.onend = () => playNextChunk();
                         utterance.onerror = (e) => { if(e.error !== 'canceled') playNextChunk(); };
-
                         synth.speak(utterance);
                     }
                 }
 
                 speakBtn.addEventListener('click', () => {
                     const text = textInput.value.trim();
-                    if (text === '') { alert("Please enter text or open a document first."); return; }
+                    if (text === '') { alert("Please enter text first."); return; }
 
                     stopSpeaking(); speakBtn.disabled = true; stopBtn.disabled = false;
                     
@@ -591,11 +531,14 @@
                         const spanId = 'tts-phrase-' + index;
                         const span = document.createElement('span');
                         span.id = spanId; span.className = 'phrase-chunk'; span.textContent = chunk + ' '; 
-                        readingDisplay.appendChild(span);
-                        audioQueue.push({ text: chunk, id: spanId });
+                        readingDisplay.appendChild(span); audioQueue.push({ text: chunk, id: spanId });
                     });
 
-                    playNextChunk();
+                    // Unlock Trick: Play a tiny silent sound immediately on user click
+                    globalAudioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"; 
+                    globalAudioPlayer.play().catch(()=>{}).finally(() => {
+                        playNextChunk(); 
+                    });
                 });
             })();
             
