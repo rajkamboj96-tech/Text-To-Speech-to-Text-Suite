@@ -1,0 +1,750 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Voice Suite - 2 in 1</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+
+    <style>
+        /* --- GLOBAL & VARIABLES --- */
+        :root {
+            /* TTS Colors */
+            --tts-primary: #4285f4; 
+            --tts-secondary: #ea4335; 
+            --tts-highlight: #cce5ff; 
+            --tts-highlight-text: #004085; 
+            --tts-highlight-border: #007bff; 
+            --tts-bg: #f8f9fa;
+            --tts-container-bg: #ffffff;
+            --tts-text: #202124;
+            /* STT Colors */
+            --stt-primary: #4a90e2;
+            --stt-danger: #e74c3c;
+            --stt-success: #2ecc71;
+            --stt-warning: #f39c12;
+            --stt-secondary: #6c757d;
+            --stt-bg: #f1f3f5;
+            --stt-accent: #ff5722;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Raavi", "Mangal", "Lohit Hindi", "Lohit Punjabi", sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- SCREEN ROUTING --- */
+        .screen {
+            display: none;
+            width: 100vw;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .screen.active {
+            display: flex;
+        }
+
+        /* Back Button styles */
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #343a40;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1000;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .back-btn:hover {
+            background: #1d2124;
+            transform: scale(1.05);
+        }
+
+        /* --- HOME SCREEN CSS --- */
+        #home-screen {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .home-title {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .home-subtitle {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .card-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .tool-card {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 15px;
+            width: 220px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-bottom: 5px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .tool-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+        }
+        .tool-card.stt-card:hover { border-bottom-color: var(--stt-success); }
+        .tool-card.tts-card:hover { border-bottom-color: var(--tts-primary); }
+        .card-icon { font-size: 3.5rem; margin-bottom: 15px; }
+        .card-title { font-size: 1.4rem; font-weight: bold; margin: 0; color: #333; }
+
+        /* --- STT SCREEN CSS --- */
+        #stt-screen {
+            flex-direction: column;
+            background: var(--stt-bg);
+            padding: 60px 8px 8px 8px;
+        }
+        .stt-header-container { text-align: center; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+        .stt-header-title { margin: 0; font-size: 20px; font-weight: 800; background: linear-gradient(45deg, #2196F3, #9C27B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
+        .stt-attribution { font-size: 8px; color: var(--stt-accent); font-weight: bold; margin-top: 2px; letter-spacing: 0.5px; }
+        .stt-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 6px; }
+        .stt-controls button, .stt-controls select { padding: 8px 4px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; font-weight: 600; outline: none; transition: background 0.3s ease; cursor: pointer;}
+        #stt-langSelect { background: white; grid-column: span 3; padding: 8px; font-size: 14px; }
+        #stt-startBtn { background: var(--stt-success); color: white; border: none; }
+        #stt-startBtn.recording { background: var(--stt-danger) !important; animation: pulse 1.5s infinite; }
+        #stt-stopBtn { background: var(--stt-secondary); color: white; border: none; }
+        #stt-copyBtn { background: var(--stt-primary); color: white; border: none; }
+        #stt-undoBtn, #stt-redoBtn { background: #adb5bd; color: white; border: none; }
+        #stt-clearBtn { background: #343a40; color: white; border: none; }
+        #stt-editBtn { background: var(--stt-warning); color: white; border: none; }
+        #stt-downloadBtn { background: #17a2b8; color: white; border: none; }
+        #stt-fontSizeSelect { grid-column: span 1; padding: 6px; background: #fff; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .stt-status { text-align: center; font-size: 10px; color: #777; margin-bottom: 4px; }
+        #stt-log, #stt-editTextarea { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px; flex-grow: 1; overflow-y: auto; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); line-height: 1.4; }
+        #stt-editTextarea { width: 100%; box-sizing: border-box; resize: none; display: none; font-family: inherit; }
+        .log-entry { border-bottom: 1px solid #f3f3f3; padding: 4px 0; }
+
+        /* --- TTS SCREEN CSS --- */
+        #tts-screen {
+            justify-content: center;
+            align-items: center;
+            background: var(--tts-bg);
+            color: var(--tts-text);
+            padding: 60px 20px 20px 20px; 
+        }
+        .tts-container { background-color: var(--tts-container-bg); padding: 30px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.12); width: 100%; max-width: 650px; }
+        .tts-container h1 { text-align: center; margin-bottom: 25px; font-size: 1.6rem; color: var(--tts-primary); margin-top:0;}
+        .tts-toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tts-toolbar button { flex: 1; padding: 8px; font-size: 0.9rem; background-color: #f1f3f4; color: #3c4043; border: 1px solid #dadce0; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+        .tts-toolbar button:hover { background-color: #e8eaed; }
+        .tts-input-group { margin-bottom: 20px; position: relative; }
+        .tts-input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.95rem; }
+        #tts-text-input, .tts-reading-box { width: 100%; padding: 15px; border: 1px solid #dadce0; border-radius: 8px; font-family: inherit; box-sizing: border-box; font-size: 1.15rem; line-height: 1.8; min-height: 200px; }
+        #tts-text-input { resize: vertical; }
+        .tts-reading-box { display: none; background-color: #fdfefe; overflow-y: auto; max-height: 350px; white-space: pre-wrap; color: #555; }
+        .phrase-chunk { border-radius: 4px; padding: 2px 4px; margin-right: 2px; transition: all 0.2s ease-in-out; }
+        .highlight-active { background-color: var(--tts-highlight); color: var(--tts-highlight-text); border-bottom: 3px solid var(--tts-highlight-border); font-weight: 600; font-size: 1.2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .tts-controls-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .tts-controls-row > div { flex: 1; }
+        .tts-container select, .tts-container input[type="range"] { width: 100%; padding: 10px; border: 1px solid #dadce0; border-radius: 8px; font-size: 1rem; box-sizing: border-box; background-color: #fff; cursor: pointer;}
+        .engine-selector { background-color: #e8f0fe; padding: 12px; border-radius: 8px; border: 1px solid #d2e3fc; margin-bottom: 20px; }
+        .engine-selector label { margin: 0; color: #1967d2; display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 500; font-size: 0.9rem;}
+        .tts-slider-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .tts-slider-group label { margin-bottom: 0; width: 70px; }
+        .tts-slider-value { width: 30px; text-align: right; font-size: 0.9rem; color: #5f6368; font-weight: bold; }
+        .tts-button-group { display: flex; gap: 10px; margin-top: 20px; }
+        button.tts-action-btn { flex: 1; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; color: white; transition: opacity 0.3s; }
+        #tts-speak-btn { background-color: var(--tts-primary); }
+        #tts-stop-btn { background-color: var(--tts-secondary); }
+        button.tts-action-btn:hover { opacity: 0.9; }
+        button.tts-action-btn:disabled { background-color: #bdc3c7; cursor: not-allowed; opacity: 1; }
+        .tts-status { margin-top: 15px; text-align: center; font-size: 0.95rem; color: #5f6368; font-weight: 500; min-height: 20px; }
+
+        /* ================= MOBILE RESPONSIVENESS ================= */
+        @media (max-width: 600px) {
+            /* Home Screen adjustments for Mobile */
+            .home-title { font-size: 1.8rem; margin-top: 20px; }
+            .home-subtitle { font-size: 0.95rem; margin-bottom: 20px; }
+            .card-container { flex-direction: column; align-items: center; gap: 15px; }
+            .tool-card { 
+                width: 85%; 
+                max-width: 300px; 
+                padding: 15px 20px; 
+                flex-direction: row; /* Icon and text side-by-side on mobile */
+                justify-content: flex-start;
+                text-align: left;
+            }
+            .card-icon { font-size: 2.2rem; margin-bottom: 0; margin-right: 15px; }
+            .card-title { font-size: 1.2rem; }
+
+            /* Buttons inside STT and TTS for Mobile */
+            .stt-controls button, .stt-controls select { padding: 6px 2px; font-size: 0.8rem; }
+            .tts-toolbar { flex-wrap: wrap; }
+            .tts-toolbar button { font-size: 0.8rem; padding: 6px; }
+            .tts-controls-row { flex-direction: column; gap: 10px; }
+            
+            /* Back button sizing for Mobile */
+            .back-btn { padding: 8px 12px; font-size: 0.85rem; top: 10px; left: 10px; }
+            
+            /* Padding adjustments */
+            #stt-screen { padding-top: 55px; }
+            #tts-screen { padding: 55px 10px 10px 10px; }
+            .tts-container { padding: 20px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="home-screen" class="screen active">
+        <h1 class="home-title">Ultimate Voice Suite</h1>
+        <div class="home-subtitle">Select a tool to get started</div>
+        
+        <div class="card-container">
+            <div class="tool-card stt-card" onclick="openScreen('stt-screen')">
+                <div class="card-icon">🎙️</div>
+                <div class="card-title">Speech to Text</div>
+            </div>
+
+            <div class="tool-card tts-card" onclick="openScreen('tts-screen')">
+                <div class="card-icon">🔊</div>
+                <div class="card-title">Text to Speech</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stt-screen" class="screen">
+        <button class="back-btn" onclick="openScreen('home-screen')">⬅️ Back</button>
+        
+        <div class="stt-header-container">
+            <h2 class="stt-header-title">Speech to Text</h2>
+            <div class="stt-attribution">BY-RAJ KAMBOJ 9465428299</div>
+        </div>
+
+        <div class="stt-controls">
+            <select id="stt-langSelect">
+                <option value="en-US">English</option>
+                <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
+                <option value="hi-IN">Hindi (हिन्दी)</option>
+                <option value="ur-PK">Urdu (اردو)</option>
+            </select>
+            
+            <button id="stt-startBtn">Start</button>
+            <button id="stt-stopBtn">Stop</button>
+            <button id="stt-copyBtn">Copy</button>
+            
+            <button id="stt-undoBtn">Undo</button>
+            <button id="stt-redoBtn">Redo</button>
+            <button id="stt-clearBtn">Clear</button>
+
+            <button id="stt-editBtn">Edit</button>
+            <button id="stt-downloadBtn">Save .txt</button>
+            <select id="stt-fontSizeSelect">
+                <option value="10px">10px</option>
+                <option value="14px" selected>14px</option>
+                <option value="18px">18px</option>
+                <option value="22px">22px</option>
+                <option value="25px">25px</option>
+            </select>
+        </div>
+
+        <div class="stt-status" id="stt-status">Status: Idle</div>
+        
+        <div id="stt-log"></div>
+        <textarea id="stt-editTextarea" placeholder="Edit text..."></textarea>
+    </div>
+
+    <div id="tts-screen" class="screen">
+        <button class="back-btn" onclick="openScreen('home-screen')">⬅️ Back</button>
+
+        <div class="tts-container">
+            <h1>Document Text to Speech</h1>
+            
+            <div class="tts-toolbar">
+                <button id="tts-open-btn" title="Open .txt, .pdf, or .docx file">📂 Open Doc</button>
+                <input type="file" id="tts-file-input" accept=".txt,.pdf,.doc,.docx" style="display:none;">
+                <button id="tts-paste-btn" title="Paste from clipboard">📋 Paste</button>
+                <button id="tts-clear-btn" title="Clear text area">🗑️ Clear</button>
+            </div>
+
+            <div class="tts-input-group">
+                <textarea id="tts-text-input" placeholder="ਇੱਥੇ ਲਿਖੋ ਜਾਂ ਕੋਈ PDF / Word ਫਾਈਲ ਖੋਲ੍ਹੋ..."></textarea>
+                <div id="tts-reading-display" class="tts-reading-box"></div>
+            </div>
+
+            <div class="engine-selector">
+                <label>
+                    <input type="radio" name="tts-voice-engine" value="google" checked> 
+                    Google Voice (Online)
+                </label>
+                <label style="margin-top: 8px; color: #5f6368;">
+                    <input type="radio" name="tts-voice-engine" value="browser"> 
+                    Device Voice (Offline)
+                </label>
+            </div>
+
+            <div class="tts-controls-row">
+                <div>
+                    <label for="tts-language-select">Language:</label>
+                    <select id="tts-language-select">
+                        <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
+                        <option value="en">English</option>
+                        <option value="hi">Hindi (हिंदी)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="tts-input-group">
+                <div class="tts-slider-group" id="tts-pitch-container" style="opacity: 0.5;">
+                    <label for="tts-pitch-slider">Pitch:</label>
+                    <input type="range" id="tts-pitch-slider" min="0" max="2" step="0.1" value="1" disabled>
+                    <span class="tts-slider-value" id="tts-pitch-value">1.0</span>
+                </div>
+                <div class="tts-slider-group">
+                    <label for="tts-rate-slider">Speed:</label>
+                    <input type="range" id="tts-rate-slider" min="0.5" max="2" step="0.1" value="0.9">
+                    <span class="tts-slider-value" id="tts-rate-value">0.9</span>
+                </div>
+            </div>
+
+            <div class="tts-button-group">
+                <button id="tts-speak-btn" class="tts-action-btn">🔊 Speak</button>
+                <button id="tts-stop-btn" class="tts-action-btn" disabled>⏹️ Stop</button>
+            </div>
+
+            <div class="tts-status" id="tts-status-message">Ready</div>
+        </div>
+    </div>
+
+    <script>
+        // Set worker path for PDF.js globally
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        // Global Stop Functions to ensure audio/mic turns off when leaving a screen
+        let globalStopSTT = () => {};
+        let globalStopTTS = () => {};
+
+        // Screen Navigation Logic
+        function openScreen(screenId) {
+            globalStopSTT();
+            globalStopTTS();
+
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // ==========================================
+            // LOGIC FOR SPEECH TO TEXT (STT)
+            // ==========================================
+            (() => {
+                const startBtn = document.getElementById('stt-startBtn');
+                const stopBtn = document.getElementById('stt-stopBtn');
+                const undoBtn = document.getElementById('stt-undoBtn');
+                const redoBtn = document.getElementById('stt-redoBtn');
+                const copyBtn = document.getElementById('stt-copyBtn');
+                const clearBtn = document.getElementById('stt-clearBtn');
+                const editBtn = document.getElementById('stt-editBtn');
+                const downloadBtn = document.getElementById('stt-downloadBtn');
+                const langSelect = document.getElementById('stt-langSelect');
+                const fontSizeSelect = document.getElementById('stt-fontSizeSelect');
+                const log = document.getElementById('stt-log');
+                const editTextarea = document.getElementById('stt-editTextarea');
+                const status = document.getElementById('stt-status');
+
+                let history = [];
+                let redoStack = [];
+                let isEditing = false;
+                let recognition = null;
+
+                const applyFontSize = (size) => {
+                    log.style.fontSize = size;
+                    editTextarea.style.fontSize = size;
+                };
+                applyFontSize(fontSizeSelect.value);
+
+                const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+                
+                if (!SpeechRecognitionAPI) {
+                    status.innerText = "Speech Recognition not supported in this browser.";
+                    startBtn.disabled = true;
+                } else {
+                    recognition = new SpeechRecognitionAPI();
+                    recognition.continuous = true;
+                    recognition.interimResults = false;
+                    recognition.lang = langSelect.value;
+
+                    langSelect.onchange = () => { 
+                        recognition.lang = langSelect.value;
+                        const dir = langSelect.value === 'ur-PK' ? 'rtl' : 'ltr';
+                        log.style.direction = dir;
+                        editTextarea.style.direction = dir;
+                        renderLog();
+                    };
+
+                    fontSizeSelect.onchange = () => applyFontSize(fontSizeSelect.value);
+
+                    recognition.onstart = () => { 
+                        status.innerText = "Listening..."; 
+                        startBtn.classList.add('recording');
+                        startBtn.innerText = "Recording...";
+                    };
+                    
+                    recognition.onend = () => { 
+                        status.innerText = "Stopped."; 
+                        startBtn.classList.remove('recording');
+                        startBtn.innerText = "Start";
+                    };
+
+                    recognition.onresult = (event) => {
+                        const text = event.results[event.results.length - 1][0].transcript.trim();
+                        if (text) {
+                            history.push(text);
+                            redoStack = []; 
+                            renderLog();
+                        }
+                    };
+
+                    editBtn.onclick = () => {
+                        if (!isEditing) {
+                            isEditing = true;
+                            editBtn.innerText = "Save";
+                            editBtn.style.background = "#2ecc71";
+                            startBtn.disabled = true;
+                            editTextarea.value = history.join('\n');
+                            log.style.display = 'none';
+                            editTextarea.style.display = 'block';
+                            editTextarea.focus();
+                        } else {
+                            isEditing = false;
+                            editBtn.innerText = "Edit";
+                            editBtn.style.background = "#f39c12";
+                            startBtn.disabled = false;
+                            const newContent = editTextarea.value.trim();
+                            history = newContent ? newContent.split('\n') : [];
+                            log.style.display = 'block';
+                            editTextarea.style.display = 'none';
+                            renderLog();
+                        }
+                    };
+
+                    undoBtn.onclick = () => { if (history.length > 0) { redoStack.push(history.pop()); renderLog(); } };
+                    redoBtn.onclick = () => { if (redoStack.length > 0) { history.push(redoStack.pop()); renderLog(); } };
+                    clearBtn.onclick = () => { if (confirm("Clear all?")) { history = []; redoStack = []; renderLog(); } };
+
+                    copyBtn.onclick = () => {
+                        const content = isEditing ? editTextarea.value : history.join('\n');
+                        navigator.clipboard.writeText(content).then(() => {
+                            const oldText = copyBtn.innerText;
+                            copyBtn.innerText = "Done";
+                            setTimeout(() => copyBtn.innerText = oldText, 1000);
+                        });
+                    };
+
+                    downloadBtn.onclick = () => {
+                        const content = isEditing ? editTextarea.value : history.join('\n');
+                        const BOM = "\uFEFF";
+                        const blob = new Blob([BOM + content], { type: 'text/plain;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `voice-log-${new Date().toLocaleDateString()}.txt`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    };
+
+                    function renderLog() {
+                        log.innerHTML = '';
+                        history.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'log-entry';
+                            div.textContent = item;
+                            if(langSelect.value === 'ur-PK') div.style.textAlign = 'right';
+                            log.appendChild(div);
+                        });
+                        log.scrollTop = log.scrollHeight;
+                    }
+
+                    startBtn.onclick = () => recognition.start();
+                    stopBtn.onclick = () => recognition.stop();
+                }
+
+                globalStopSTT = () => {
+                    if(recognition) recognition.stop();
+                };
+            })();
+
+
+            // ==========================================
+            // LOGIC FOR TEXT TO SPEECH (TTS)
+            // ==========================================
+            (() => {
+                const textInput = document.getElementById('tts-text-input');
+                const readingDisplay = document.getElementById('tts-reading-display');
+                const languageSelect = document.getElementById('tts-language-select');
+                const speakBtn = document.getElementById('tts-speak-btn');
+                const stopBtn = document.getElementById('tts-stop-btn');
+                const statusMessage = document.getElementById('tts-status-message');
+                
+                const pitchSlider = document.getElementById('tts-pitch-slider');
+                const pitchValue = document.getElementById('tts-pitch-value');
+                const rateSlider = document.getElementById('tts-rate-slider');
+                const rateValue = document.getElementById('tts-rate-value');
+                const engineRadios = document.getElementsByName('tts-voice-engine');
+                const pitchContainer = document.getElementById('tts-pitch-container');
+
+                const openBtn = document.getElementById('tts-open-btn');
+                const fileInput = document.getElementById('tts-file-input');
+                const pasteBtn = document.getElementById('tts-paste-btn');
+                const clearBtn = document.getElementById('tts-clear-btn');
+
+                let currentAudio = null;
+                let audioQueue = [];
+                const synth = window.speechSynthesis;
+
+                function setReadingMode(isActive) {
+                    if (isActive) {
+                        textInput.style.display = 'none';
+                        readingDisplay.style.display = 'block';
+                    } else {
+                        textInput.style.display = 'block';
+                        readingDisplay.style.display = 'none';
+                        readingDisplay.innerHTML = '';
+                    }
+                }
+
+                function updateEngineUI() {
+                    const isGoogle = document.querySelector('input[name="tts-voice-engine"]:checked').value === 'google';
+                    pitchSlider.disabled = isGoogle;
+                    pitchContainer.style.opacity = isGoogle ? '0.5' : '1';
+                }
+
+                engineRadios.forEach(radio => radio.addEventListener('change', updateEngineUI));
+                pitchSlider.addEventListener('input', () => pitchValue.textContent = parseFloat(pitchSlider.value).toFixed(1));
+                rateSlider.addEventListener('input', () => rateValue.textContent = parseFloat(rateSlider.value).toFixed(1));
+
+                openBtn.addEventListener('click', () => fileInput.click());
+                
+                fileInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    statusMessage.textContent = `Loading ${file.name}... Please wait.`;
+                    statusMessage.style.color = "#ea4335"; 
+
+                    try {
+                        const fileType = file.name.split('.').pop().toLowerCase();
+
+                        if (fileType === 'txt') {
+                            const reader = new FileReader();
+                            reader.onload = (e) => { textInput.value = e.target.result; finishLoading(); };
+                            reader.readAsText(file);
+                        } 
+                        else if (fileType === 'pdf') {
+                            const arrayBuffer = await file.arrayBuffer();
+                            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                            let text = "";
+                            for (let i = 1; i <= pdf.numPages; i++) {
+                                const page = await pdf.getPage(i);
+                                const content = await page.getTextContent();
+                                const strings = content.items.map(item => item.str);
+                                text += strings.join(" ") + "\n";
+                            }
+                            textInput.value = text;
+                            finishLoading();
+                        } 
+                        else if (fileType === 'docx' || fileType === 'doc') {
+                            const arrayBuffer = await file.arrayBuffer();
+                            const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                            textInput.value = result.value;
+                            finishLoading();
+                        } 
+                        else {
+                            statusMessage.textContent = "Unsupported file type.";
+                        }
+                    } catch (error) {
+                        console.error("Error reading file:", error);
+                        statusMessage.textContent = "Error extracting text from document.";
+                    }
+                    fileInput.value = ''; 
+                });
+
+                function finishLoading() {
+                    statusMessage.textContent = "Document loaded successfully! Ready to speak.";
+                    statusMessage.style.color = "#5f6368";
+                }
+
+                pasteBtn.addEventListener('click', async () => {
+                    try {
+                        const text = await navigator.clipboard.readText();
+                        textInput.value += text;
+                    } catch (err) { alert('Clipboard access denied.'); }
+                });
+
+                clearBtn.addEventListener('click', () => {
+                    textInput.value = '';
+                    stopSpeaking();
+                });
+
+                function stopSpeaking() {
+                    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+                    audioQueue = []; 
+                    synth.cancel();  
+                    setReadingMode(false); 
+                    statusMessage.textContent = 'Stopped';
+                    speakBtn.disabled = false;
+                    stopBtn.disabled = true;
+                }
+
+                stopBtn.addEventListener('click', stopSpeaking);
+
+                globalStopTTS = stopSpeaking;
+
+                function splitIntoSmartSentences(text) {
+                    let txt = text;
+                    txt = txt.replace(/(\d)\.(\d)/g, '$1<DOT>$2');
+                    txt = txt.replace(/(\b\d{1,3})\./g, '$1<DOT>');
+                    txt = txt.replace(/(\b[a-zA-Z])\./g, '$1<DOT>');
+                    
+                    const abbrs = ['mr', 'mrs', 'ms', 'dr', 'prof', 'sr', 'jr', 'st', 'ed', 'ph', 'rs', 'govt', 'ltd', 'inc', 'co'];
+                    const abbrRegex = new RegExp(`\\b(${abbrs.join('|')})\\.`, 'gi');
+                    txt = txt.replace(abbrRegex, '$1<DOT>');
+
+                    const rawChunks = txt.match(/[^.?!।\n]+[.?!।\n]*/g) || [txt];
+                    let processedChunks = [];
+                    
+                    rawChunks.forEach(chunk => {
+                        let cleanChunk = chunk.replace(/<DOT>/g, '.').trim();
+                        if (cleanChunk.length > 0) {
+                            if (cleanChunk.length > 180) {
+                                let words = cleanChunk.split(' ');
+                                let tempStr = '';
+                                words.forEach(word => {
+                                    if ((tempStr + word).length < 170) {
+                                        tempStr += word + ' ';
+                                    } else {
+                                        processedChunks.push(tempStr.trim());
+                                        tempStr = word + ' ';
+                                    }
+                                });
+                                if (tempStr.trim().length > 0) processedChunks.push(tempStr.trim());
+                            } else {
+                                processedChunks.push(cleanChunk);
+                            }
+                        }
+                    });
+                    return processedChunks;
+                }
+
+                function playNextChunk() {
+                    if (audioQueue.length === 0) {
+                        statusMessage.textContent = 'Finished reading entire document.';
+                        speakBtn.disabled = false;
+                        stopBtn.disabled = true;
+                        setTimeout(() => setReadingMode(false), 1500); 
+                        return;
+                    }
+
+                    const currentItem = audioQueue.shift();
+                    const textChunk = currentItem.text;
+                    const spanId = currentItem.id;
+                    const lang = languageSelect.value;
+                    const engine = document.querySelector('input[name="tts-voice-engine"]:checked').value;
+                    
+                    document.querySelectorAll('#tts-reading-display span').forEach(el => el.classList.remove('highlight-active'));
+                    const activeElement = document.getElementById(spanId);
+                    if (activeElement) {
+                        activeElement.classList.add('highlight-active');
+                        activeElement.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+
+                    if (engine === 'google') {
+                        const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${lang}&q=${encodeURIComponent(textChunk)}`;
+                        currentAudio = new Audio(url);
+                        currentAudio.playbackRate = parseFloat(rateSlider.value);
+                        
+                        currentAudio.onplay = () => { statusMessage.textContent = `🔊 Speaking (Unlimited Mode)... [${audioQueue.length} chunks left]`; };
+                        currentAudio.onended = () => { setTimeout(playNextChunk, 300); };
+                        currentAudio.onerror = () => { console.warn("Audio chunk failed..."); setTimeout(playNextChunk, 300); };
+
+                        currentAudio.play().catch(e => { console.error("Audio blocked.", e); stopSpeaking(); });
+                    } 
+                    else {
+                        const utterance = new SpeechSynthesisUtterance(textChunk);
+                        utterance.lang = lang === 'en' ? 'en-US' : lang + '-IN';
+                        utterance.pitch = parseFloat(pitchSlider.value);
+                        utterance.rate = parseFloat(rateSlider.value);
+
+                        utterance.onstart = () => { statusMessage.textContent = `🔊 Speaking Offline... [${audioQueue.length} chunks left]`; };
+                        utterance.onend = () => playNextChunk();
+                        utterance.onerror = (e) => { if(e.error !== 'canceled') playNextChunk(); };
+
+                        synth.speak(utterance);
+                    }
+                }
+
+                speakBtn.addEventListener('click', () => {
+                    const text = textInput.value.trim();
+                    if (text === '') {
+                        statusMessage.textContent = 'Please enter text or open a document first.';
+                        return;
+                    }
+
+                    stopSpeaking(); 
+                    speakBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    
+                    const chunks = splitIntoSmartSentences(text);
+                    audioQueue = [];
+                    readingDisplay.innerHTML = ''; 
+                    setReadingMode(true);
+
+                    chunks.forEach((chunk, index) => {
+                        const spanId = 'tts-phrase-' + index;
+                        const span = document.createElement('span');
+                        span.id = spanId;
+                        span.className = 'phrase-chunk';
+                        span.textContent = chunk + ' '; 
+                        readingDisplay.appendChild(span);
+                        audioQueue.push({ text: chunk, id: spanId });
+                    });
+
+                    playNextChunk();
+                });
+            })();
+            
+        });
+    </script>
+</body>
+</html>
