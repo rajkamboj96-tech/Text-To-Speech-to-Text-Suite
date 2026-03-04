@@ -33,49 +33,24 @@
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Raavi", "Mangal", "Lohit Hindi", "Lohit Punjabi", sans-serif;
             overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent; /* Removes blue tap box on mobile */
+            -webkit-tap-highlight-color: transparent; 
         }
 
-        /* --- SCREEN ROUTING --- */
-        .screen {
-            display: none;
-            width: 100vw;
-            min-height: 100vh;
-            box-sizing: border-box;
-            position: relative;
-        }
-        .screen.active {
-            display: flex;
-        }
+        .screen { display: none; width: 100vw; min-height: 100vh; box-sizing: border-box; position: relative; }
+        .screen.active { display: flex; }
 
         .back-btn {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: #343a40;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            z-index: 1000;
-            transition: 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: absolute; top: 15px; left: 15px; background: #343a40; color: white;
+            border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer;
+            font-weight: bold; z-index: 1000; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         .back-btn:hover { background: #1d2124; transform: scale(1.05); }
 
         /* --- HOME SCREEN --- */
-        #home-screen {
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        }
+        #home-screen { flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
         .home-title { font-size: 2.5rem; color: #2c3e50; margin-bottom: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); text-align: center; }
         .home-subtitle { font-size: 1.1rem; color: #7f8c8d; margin-bottom: 30px; text-align: center; }
         .card-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 10px; width: 100%; box-sizing: border-box; }
-        
         .tool-card {
             background: white; padding: 30px 20px; border-radius: 15px; width: 220px;
             text-align: center; cursor: pointer; box-shadow: 0 8px 15px rgba(0,0,0,0.1);
@@ -85,8 +60,7 @@
         .tool-card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
         .tool-card.stt-card:hover { border-bottom-color: var(--stt-success); }
         .tool-card.tts-card:hover { border-bottom-color: var(--tts-primary); }
-        .tool-card:active { transform: scale(0.95); } /* Clicking effect for mobile */
-        
+        .tool-card:active { transform: scale(0.95); } 
         .card-icon { font-size: 3.5rem; margin-bottom: 15px; }
         .card-title { font-size: 1.4rem; font-weight: bold; margin: 0; color: #333; pointer-events: none;}
 
@@ -143,25 +117,13 @@
         button.tts-action-btn:disabled { background-color: #bdc3c7; cursor: not-allowed; opacity: 1; }
         .tts-status { margin-top: 15px; text-align: center; font-size: 0.95rem; color: #5f6368; font-weight: 500; min-height: 20px; }
 
-        /* --- MOBILE RESPONSIVE (Small Buttons) --- */
         @media (max-width: 600px) {
             .home-title { font-size: 1.8rem; margin-top: 20px; }
             .home-subtitle { font-size: 0.95rem; margin-bottom: 20px; }
             .card-container { flex-direction: column; align-items: center; gap: 15px; }
-            
-            /* Home Buttons Mobile Styling */
-            .tool-card { 
-                width: 85%; 
-                max-width: 300px; 
-                padding: 15px 20px; 
-                flex-direction: row; 
-                justify-content: flex-start; 
-                text-align: left; 
-            }
+            .tool-card { width: 85%; max-width: 300px; padding: 15px 20px; flex-direction: row; justify-content: flex-start; text-align: left; }
             .card-icon { font-size: 2.2rem; margin-bottom: 0; margin-right: 15px; }
             .card-title { font-size: 1.2rem; }
-            
-            /* Inner screen Mobile Styling */
             .stt-controls button, .stt-controls select { padding: 6px 2px; font-size: 0.8rem; }
             .tts-toolbar { flex-wrap: wrap; }
             .tts-toolbar button { font-size: 0.8rem; padding: 6px; }
@@ -174,6 +136,8 @@
     </style>
 </head>
 <body>
+
+    <audio id="globalAudioPlayer" style="display:none;" controls preload="auto"></audio>
 
     <div id="home-screen" class="screen active">
         <h1 class="home-title">Ultimate Voice Suite</h1>
@@ -293,7 +257,6 @@
     </div>
 
     <script>
-        // --- SAFE INITIALIZATION & NAVIGATION (MUST BE AT TOP) ---
         let globalStopSTT = () => {};
         let globalStopTTS = () => {};
 
@@ -305,14 +268,11 @@
                 screen.classList.remove('active'); 
             });
             document.getElementById(screenId).classList.add('active');
-            
-            // Fix for mobile: Scrolls to top so user sees the new screen
             window.scrollTo(0, 0);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             
-            // Safe initialization of PDF.js
             try {
                 if (typeof pdfjsLib !== 'undefined') {
                     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
@@ -374,7 +334,7 @@
 
                     recognition.onerror = (event) => {
                         if (event.error === 'not-allowed') {
-                            alert("Microphone access denied! Allow microphone in browser settings.");
+                            alert("Microphone access denied! Allow microphone in App settings.");
                             status.innerText = "Error: Mic denied.";
                         }
                     };
@@ -437,7 +397,8 @@
                 const pitchSlider = document.getElementById('tts-pitch-slider');
                 const rateSlider = document.getElementById('tts-rate-slider');
                 
-                const globalAudioPlayer = new Audio();
+                // --- APK AUDIO FIX: Use existing HTML <audio> element ---
+                const globalAudioPlayer = document.getElementById('globalAudioPlayer');
                 let audioQueue = []; 
                 const synth = window.speechSynthesis;
 
@@ -499,9 +460,17 @@
                     return processedChunks;
                 }
 
+                // This handles playing the audio file without errors
+                globalAudioPlayer.onended = () => { setTimeout(playNextChunk, 300); };
+                globalAudioPlayer.onerror = (e) => { 
+                    console.error("Audio Player Error: ", e);
+                    // Only skip to next if we actually had a valid queue
+                    if(audioQueue.length > 0) { setTimeout(playNextChunk, 300); }
+                };
+
                 function playNextChunk() {
                     if (audioQueue.length === 0) {
-                        statusMessage.textContent = 'Finished reading entire document.';
+                        statusMessage.textContent = 'Finished reading.';
                         speakBtn.disabled = false; stopBtn.disabled = true; setTimeout(() => setReadingMode(false), 1500); return;
                     }
 
@@ -521,13 +490,11 @@
                         globalAudioPlayer.src = url;
                         globalAudioPlayer.playbackRate = parseFloat(rateSlider.value);
                         
-                        globalAudioPlayer.onplay = () => { statusMessage.textContent = `🔊 Speaking... [${audioQueue.length} chunks left]`; };
-                        globalAudioPlayer.onended = () => { setTimeout(playNextChunk, 300); };
-                        globalAudioPlayer.onerror = () => { setTimeout(playNextChunk, 300); };
-
+                        statusMessage.textContent = `🔊 Speaking... [${audioQueue.length} chunks left]`;
+                        
                         globalAudioPlayer.play().catch(e => { 
-                            console.error("Audio Blocked:", e);
-                            alert("Audio playback was blocked. This is a browser security rule. Try clicking 'Speak' again.");
+                            console.error("Audio Blocked in APK:", e);
+                            statusMessage.textContent = "Audio blocked. Please check App Permissions.";
                             stopSpeaking(); 
                         });
                     } 
@@ -560,10 +527,20 @@
                         readingDisplay.appendChild(span); audioQueue.push({ text: chunk, id: spanId });
                     });
 
+                    // Bypass Autoplay Restrictions using silent base64 audio
                     globalAudioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"; 
-                    globalAudioPlayer.play().catch(()=>{}).finally(() => {
-                        playNextChunk(); 
-                    });
+                    const playPromise = globalAudioPlayer.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.then(_ => {
+                            playNextChunk(); 
+                        }).catch(error => {
+                            // Even if silent audio fails, try to play the real audio
+                            playNextChunk();
+                        });
+                    } else {
+                        playNextChunk();
+                    }
                 });
             } catch(e) { console.error("TTS Error", e); }
             
