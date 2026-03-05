@@ -3,548 +3,309 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Voice Suite - 2 in 1</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
-
+    <title>Voice Logger Pro - Unicode</title>
     <style>
-        /* --- GLOBAL & VARIABLES --- */
         :root {
-            --tts-primary: #4285f4; 
-            --tts-secondary: #ea4335; 
-            --tts-highlight: #cce5ff; 
-            --tts-highlight-text: #004085; 
-            --tts-highlight-border: #007bff; 
-            --tts-bg: #f8f9fa;
-            --tts-container-bg: #ffffff;
-            --tts-text: #202124;
-            --stt-primary: #4a90e2;
-            --stt-danger: #e74c3c;
-            --stt-success: #2ecc71;
-            --stt-warning: #f39c12;
-            --stt-secondary: #6c757d;
-            --stt-bg: #f1f3f5;
-            --stt-accent: #ff5722;
+            --primary: #4a90e2;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --secondary: #6c757d;
+            --bg: #f1f3f5;
+            --accent: #ff5722;
         }
-
-        body {
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Raavi", "Mangal", "Lohit Hindi", "Lohit Punjabi", sans-serif; 
+            padding: 8px; 
+            background: var(--bg);
             margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Raavi", "Mangal", "Lohit Hindi", "Lohit Punjabi", sans-serif;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent; 
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        
+        .header-container {
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 4px;
+        }
+        .header-title {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(45deg, #2196F3, #9C27B0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+        .attribution {
+            font-size: 8px; 
+            color: var(--accent);
+            font-weight: bold;
+            margin-top: 2px;
+            letter-spacing: 0.5px;
         }
 
-        .screen { display: none; width: 100vw; min-height: 100vh; box-sizing: border-box; position: relative; }
-        .screen.active { display: flex; }
-
-        .back-btn {
-            position: absolute; top: 15px; left: 15px; background: #343a40; color: white;
-            border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer;
-            font-weight: bold; z-index: 1000; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        .controls { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 4px; 
+            margin-bottom: 6px; 
         }
-        .back-btn:hover { background: #1d2124; transform: scale(1.05); }
-
-        /* --- HOME SCREEN --- */
-        #home-screen { flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
-        .home-title { font-size: 2.5rem; color: #2c3e50; margin-bottom: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); text-align: center; }
-        .home-subtitle { font-size: 1.1rem; color: #7f8c8d; margin-bottom: 30px; text-align: center; }
-        .card-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 10px; width: 100%; box-sizing: border-box; }
-        .tool-card {
-            background: white; padding: 30px 20px; border-radius: 15px; width: 220px;
-            text-align: center; cursor: pointer; box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease; border-bottom: 5px solid transparent;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        
+        button, select {
+            padding: 6px 2px;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-weight: 600;
+            outline: none;
+            transition: background 0.3s ease;
         }
-        .tool-card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
-        .tool-card.stt-card:hover { border-bottom-color: var(--stt-success); }
-        .tool-card.tts-card:hover { border-bottom-color: var(--tts-primary); }
-        .tool-card:active { transform: scale(0.95); } 
-        .card-icon { font-size: 3.5rem; margin-bottom: 15px; }
-        .card-title { font-size: 1.4rem; font-weight: bold; margin: 0; color: #333; pointer-events: none;}
 
-        /* --- STT SCREEN --- */
-        #stt-screen { flex-direction: column; background: var(--stt-bg); padding: 60px 8px 8px 8px; }
-        .stt-header-container { text-align: center; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-        .stt-header-title { margin: 0; font-size: 20px; font-weight: 800; background: linear-gradient(45deg, #2196F3, #9C27B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
-        .stt-attribution { font-size: 8px; color: var(--stt-accent); font-weight: bold; margin-top: 2px; letter-spacing: 0.5px; }
-        .stt-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 6px; }
-        .stt-controls button, .stt-controls select { padding: 8px 4px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; font-weight: 600; outline: none; transition: background 0.3s ease; cursor: pointer;}
-        #stt-langSelect { background: white; grid-column: span 3; padding: 8px; font-size: 14px; }
-        #stt-startBtn { background: var(--stt-success); color: white; border: none; }
-        #stt-startBtn.recording { background: var(--stt-danger) !important; animation: pulse 1.5s infinite; }
-        #stt-stopBtn { background: var(--stt-secondary); color: white; border: none; }
-        #stt-copyBtn { background: var(--stt-primary); color: white; border: none; }
-        #stt-undoBtn, #stt-redoBtn { background: #adb5bd; color: white; border: none; }
-        #stt-clearBtn { background: #343a40; color: white; border: none; }
-        #stt-editBtn { background: var(--stt-warning); color: white; border: none; }
-        #stt-downloadBtn { background: #17a2b8; color: white; border: none; }
-        #stt-fontSizeSelect { grid-column: span 1; padding: 6px; background: #fff; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-        .stt-status { text-align: center; font-size: 10px; color: #777; margin-bottom: 4px; font-weight: bold;}
-        #stt-log, #stt-editTextarea { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px; flex-grow: 1; overflow-y: auto; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); line-height: 1.4; }
-        #stt-editTextarea { width: 100%; box-sizing: border-box; resize: none; display: none; font-family: inherit; }
-        .log-entry { border-bottom: 1px solid #f3f3f3; padding: 4px 0; }
+        select { background: white; grid-column: span 3; padding: 8px; font-size: 14px; }
+        
+        /* Initial Start Style */
+        #startBtn { background: var(--success); color: white; border: none; }
+        /* Recording State Style */
+        #startBtn.recording { background: var(--danger) !important; animation: pulse 1.5s infinite; }
+        
+        #stopBtn { background: var(--secondary); color: white; border: none; }
+        #copyBtn { background: var(--primary); color: white; border: none; }
+        #undoBtn, #redoBtn { background: #adb5bd; color: white; border: none; }
+        #clearBtn { background: #343a40; color: white; border: none; }
+        #editBtn { background: var(--warning); color: white; border: none; }
+        #downloadBtn { background: #17a2b8; color: white; border: none; }
+        #fontSizeSelect { grid-column: span 1; padding: 6px; background: #fff; }
 
-        /* --- TTS SCREEN --- */
-        #tts-screen { justify-content: center; align-items: center; background: var(--tts-bg); color: var(--tts-text); padding: 60px 20px 20px 20px; }
-        .tts-container { background-color: var(--tts-container-bg); padding: 30px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.12); width: 100%; max-width: 650px; }
-        .tts-container h1 { text-align: center; margin-bottom: 25px; font-size: 1.6rem; color: var(--tts-primary); margin-top:0;}
-        .tts-toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tts-toolbar button { flex: 1; padding: 8px; font-size: 0.9rem; background-color: #f1f3f4; color: #3c4043; border: 1px solid #dadce0; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
-        .tts-toolbar button:hover { background-color: #e8eaed; }
-        .tts-input-group { margin-bottom: 20px; position: relative; }
-        .tts-input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.95rem; }
-        #tts-text-input, .tts-reading-box { width: 100%; padding: 15px; border: 1px solid #dadce0; border-radius: 8px; font-family: inherit; box-sizing: border-box; font-size: 1.15rem; line-height: 1.8; min-height: 200px; }
-        #tts-text-input { resize: vertical; }
-        .tts-reading-box { display: none; background-color: #fdfefe; overflow-y: auto; max-height: 350px; white-space: pre-wrap; color: #555; }
-        .phrase-chunk { border-radius: 4px; padding: 2px 4px; margin-right: 2px; transition: all 0.2s ease-in-out; }
-        .highlight-active { background-color: var(--tts-highlight); color: var(--tts-highlight-text); border-bottom: 3px solid var(--tts-highlight-border); font-weight: 600; font-size: 1.2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .tts-controls-row { display: flex; gap: 15px; margin-bottom: 15px; }
-        .tts-controls-row > div { flex: 1; }
-        .tts-container select, .tts-container input[type="range"] { width: 100%; padding: 10px; border: 1px solid #dadce0; border-radius: 8px; font-size: 1rem; box-sizing: border-box; background-color: #fff; cursor: pointer;}
-        .engine-selector { background-color: #e8f0fe; padding: 12px; border-radius: 8px; border: 1px solid #d2e3fc; margin-bottom: 20px; }
-        .engine-selector label { margin: 0; color: #1967d2; display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 500; font-size: 0.9rem;}
-        .tts-slider-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .tts-slider-group label { margin-bottom: 0; width: 70px; }
-        .tts-slider-value { width: 30px; text-align: right; font-size: 0.9rem; color: #5f6368; font-weight: bold; }
-        .tts-button-group { display: flex; gap: 10px; margin-top: 20px; }
-        button.tts-action-btn { flex: 1; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; color: white; transition: opacity 0.3s; }
-        #tts-speak-btn { background-color: var(--tts-primary); }
-        #tts-stop-btn { background-color: var(--tts-secondary); }
-        button.tts-action-btn:hover { opacity: 0.9; }
-        button.tts-action-btn:disabled { background-color: #bdc3c7; cursor: not-allowed; opacity: 1; }
-        .tts-status { margin-top: 15px; text-align: center; font-size: 0.95rem; color: #5f6368; font-weight: 500; min-height: 20px; }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
 
-        @media (max-width: 600px) {
-            .home-title { font-size: 1.8rem; margin-top: 20px; }
-            .home-subtitle { font-size: 0.95rem; margin-bottom: 20px; }
-            .card-container { flex-direction: column; align-items: center; gap: 15px; }
-            .tool-card { width: 85%; max-width: 300px; padding: 15px 20px; flex-direction: row; justify-content: flex-start; text-align: left; }
-            .card-icon { font-size: 2.2rem; margin-bottom: 0; margin-right: 15px; }
-            .card-title { font-size: 1.2rem; }
-            .stt-controls button, .stt-controls select { padding: 6px 2px; font-size: 0.8rem; }
-            .tts-toolbar { flex-wrap: wrap; }
-            .tts-toolbar button { font-size: 0.8rem; padding: 6px; }
-            .tts-controls-row { flex-direction: column; gap: 10px; }
-            .back-btn { padding: 8px 12px; font-size: 0.85rem; top: 10px; left: 10px; }
-            #stt-screen { padding-top: 55px; }
-            #tts-screen { padding: 55px 10px 10px 10px; }
-            .tts-container { padding: 20px 15px; }
+        .status { 
+            text-align: center;
+            font-size: 10px; 
+            color: #777; 
+            margin-bottom: 4px;
+        }
+
+        #log, #editTextarea { 
+            background: white; 
+            border: 1px solid #ddd; 
+            border-radius: 8px;
+            padding: 10px; 
+            flex-grow: 1;
+            overflow-y: auto;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            line-height: 1.4;
+        }
+
+        #editTextarea {
+            width: 100%;
+            box-sizing: border-box;
+            resize: none;
+            display: none;
+            font-family: inherit;
+        }
+        
+        .log-entry {
+            border-bottom: 1px solid #f3f3f3;
+            padding: 4px 0;
         }
     </style>
 </head>
 <body>
 
-    <audio id="globalAudioPlayer" style="display:none;" controls preload="auto"></audio>
-
-    <div id="home-screen" class="screen active">
-        <h1 class="home-title">Ultimate Voice Suite</h1>
-        <div class="home-subtitle">Select a tool to get started</div>
-        
-        <div class="card-container">
-            <div class="tool-card stt-card" onclick="openScreen('stt-screen')" role="button" tabindex="0">
-                <div class="card-icon">🎙️</div>
-                <div class="card-title">Speech to Text</div>
-            </div>
-            <div class="tool-card tts-card" onclick="openScreen('tts-screen')" role="button" tabindex="0">
-                <div class="card-icon">🔊</div>
-                <div class="card-title">Text to Speech</div>
-            </div>
-        </div>
+    <div class="header-container">
+        <h2 class="header-title">Speech to Text</h2>
+        <div class="attribution">BY-RAJ KAMBOJ 9465428299</div>
     </div>
 
-    <div id="stt-screen" class="screen">
-        <button class="back-btn" onclick="openScreen('home-screen')">⬅️ Back</button>
+    <div class="controls">
+        <select id="langSelect">
+            <option value="en-US">English</option>
+            <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
+            <option value="hi-IN">Hindi (हिन्दी)</option>
+            <option value="ur-PK">Urdu (اردو)</option>
+        </select>
         
-        <div class="stt-header-container">
-            <h2 class="stt-header-title">Speech to Text</h2>
-            <div class="stt-attribution">BY-RAJ KAMBOJ 9465428299</div>
-        </div>
-
-        <div class="stt-controls">
-            <select id="stt-langSelect">
-                <option value="en-US">English</option>
-                <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
-                <option value="hi-IN">Hindi (हिन्दी)</option>
-                <option value="ur-PK">Urdu (اردو)</option>
-            </select>
-            
-            <button id="stt-startBtn">Start</button>
-            <button id="stt-stopBtn">Stop</button>
-            <button id="stt-copyBtn">Copy</button>
-            <button id="stt-undoBtn">Undo</button>
-            <button id="stt-redoBtn">Redo</button>
-            <button id="stt-clearBtn">Clear</button>
-            <button id="stt-editBtn">Edit</button>
-            <button id="stt-downloadBtn">Save .txt</button>
-            <select id="stt-fontSizeSelect">
-                <option value="10px">10px</option>
-                <option value="14px" selected>14px</option>
-                <option value="18px">18px</option>
-                <option value="22px">22px</option>
-                <option value="25px">25px</option>
-            </select>
-        </div>
-
-        <div class="stt-status" id="stt-status">Status: Ready. Click Start to allow microphone.</div>
+        <button id="startBtn">Start</button>
+        <button id="stopBtn">Stop</button>
+        <button id="copyBtn">Copy</button>
         
-        <div id="stt-log"></div>
-        <textarea id="stt-editTextarea" placeholder="Edit text..."></textarea>
+        <button id="undoBtn">Undo</button>
+        <button id="redoBtn">Redo</button>
+        <button id="clearBtn">Clear</button>
+
+        <button id="editBtn">Edit</button>
+        <button id="downloadBtn">Save .txt</button>
+        <select id="fontSizeSelect">
+            <option value="10px">10px</option>
+            <option value="14px" selected>14px</option>
+            <option value="18px">18px</option>
+            <option value="22px">22px</option>
+            <option value="25px">25px</option>
+        </select>
     </div>
 
-    <div id="tts-screen" class="screen">
-        <button class="back-btn" onclick="openScreen('home-screen')">⬅️ Back</button>
-
-        <div class="tts-container">
-            <h1>Text to Speech</h1>
-            
-            <div class="tts-toolbar">
-                <button id="tts-open-btn" title="Open .txt, .pdf, or .docx file">📂 Open Doc</button>
-                <input type="file" id="tts-file-input" accept=".txt,.pdf,.doc,.docx" style="display:none;">
-                <button id="tts-paste-btn" title="Paste from clipboard">📋 Paste</button>
-                <button id="tts-clear-btn" title="Clear text area">🗑️ Clear</button>
-            </div>
-
-            <div class="tts-input-group">
-                <textarea id="tts-text-input" placeholder="ਇੱਥੇ ਲਿਖੋ ਜਾਂ ਕੋਈ PDF / Word ਫਾਈਲ ਖੋਲ੍ਹੋ..."></textarea>
-                <div id="tts-reading-display" class="tts-reading-box"></div>
-            </div>
-
-            <div class="engine-selector">
-                <label>
-                    <input type="radio" name="tts-voice-engine" value="google" checked> 
-                    Google Voice (Online)
-                </label>
-                <label style="margin-top: 8px; color: #5f6368;">
-                    <input type="radio" name="tts-voice-engine" value="browser"> 
-                    Device Voice (Offline)
-                </label>
-            </div>
-
-            <div class="tts-controls-row">
-                <div>
-                    <label for="tts-language-select">Language:</label>
-                    <select id="tts-language-select">
-                        <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
-                        <option value="en">English</option>
-                        <option value="hi">Hindi (हिंदी)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="tts-input-group">
-                <div class="tts-slider-group" id="tts-pitch-container" style="opacity: 0.5;">
-                    <label for="tts-pitch-slider">Pitch:</label>
-                    <input type="range" id="tts-pitch-slider" min="0" max="2" step="0.1" value="1" disabled>
-                    <span class="tts-slider-value" id="tts-pitch-value">1.0</span>
-                </div>
-                <div class="tts-slider-group">
-                    <label for="tts-rate-slider">Speed:</label>
-                    <input type="range" id="tts-rate-slider" min="0.5" max="2" step="0.1" value="0.9">
-                    <span class="tts-slider-value" id="tts-rate-value">0.9</span>
-                </div>
-            </div>
-
-            <div class="tts-button-group">
-                <button id="tts-speak-btn" class="tts-action-btn">🔊 Speak</button>
-                <button id="tts-stop-btn" class="tts-action-btn" disabled>⏹️ Stop</button>
-            </div>
-
-            <div class="tts-status" id="tts-status-message">Ready</div>
-        </div>
-    </div>
+    <div class="status" id="status">Status: Idle</div>
+    
+    <div id="log"></div>
+    <textarea id="editTextarea" placeholder="Edit text..."></textarea>
 
     <script>
-        let globalStopSTT = () => {};
-        let globalStopTTS = () => {};
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const editBtn = document.getElementById('editBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const langSelect = document.getElementById('langSelect');
+        const fontSizeSelect = document.getElementById('fontSizeSelect');
+        const log = document.getElementById('log');
+        const editTextarea = document.getElementById('editTextarea');
+        const status = document.getElementById('status');
 
-        function openScreen(screenId) {
-            try { globalStopSTT(); } catch(e) {}
-            try { globalStopTTS(); } catch(e) {}
-            
-            document.querySelectorAll('.screen').forEach(screen => { 
-                screen.classList.remove('active'); 
-            });
-            document.getElementById(screenId).classList.add('active');
-            window.scrollTo(0, 0);
-        }
+        let history = [];
+        let redoStack = [];
+        let isEditing = false;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        const applyFontSize = (size) => {
+            log.style.fontSize = size;
+            editTextarea.style.fontSize = size;
+        };
+        applyFontSize(fontSizeSelect.value);
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            alert("Speech Recognition not supported.");
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = langSelect.value;
+
+            langSelect.onchange = () => { 
+                recognition.lang = langSelect.value;
+                const dir = langSelect.value === 'ur-PK' ? 'rtl' : 'ltr';
+                log.style.direction = dir;
+                editTextarea.style.direction = dir;
+                renderLog();
+            };
+
+            fontSizeSelect.onchange = () => applyFontSize(fontSizeSelect.value);
+
+            recognition.onstart = () => { 
+                status.innerText = "Listening..."; 
+                startBtn.classList.add('recording');
+                startBtn.innerText = "Recording...";
+            };
             
-            try {
-                if (typeof pdfjsLib !== 'undefined') {
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
+            recognition.onend = () => { 
+                status.innerText = "Stopped."; 
+                startBtn.classList.remove('recording');
+                startBtn.innerText = "Start";
+            };
+
+            recognition.onresult = (event) => {
+                const text = event.results[event.results.length - 1][0].transcript.trim();
+                if (text) {
+                    history.push(text);
+                    redoStack = []; 
+                    renderLog();
                 }
-            } catch (e) { console.warn("PDF library loading delayed."); }
-            
-            // --- STT LOGIC ---
-            try {
-                const startBtn = document.getElementById('stt-startBtn');
-                const stopBtn = document.getElementById('stt-stopBtn');
-                const undoBtn = document.getElementById('stt-undoBtn');
-                const redoBtn = document.getElementById('stt-redoBtn');
-                const copyBtn = document.getElementById('stt-copyBtn');
-                const clearBtn = document.getElementById('stt-clearBtn');
-                const editBtn = document.getElementById('stt-editBtn');
-                const downloadBtn = document.getElementById('stt-downloadBtn');
-                const langSelect = document.getElementById('stt-langSelect');
-                const fontSizeSelect = document.getElementById('stt-fontSizeSelect');
-                const log = document.getElementById('stt-log');
-                const editTextarea = document.getElementById('stt-editTextarea');
-                const status = document.getElementById('stt-status');
+            };
 
-                let history = []; let redoStack = []; let isEditing = false; let recognition = null;
-
-                const applyFontSize = (size) => { log.style.fontSize = size; editTextarea.style.fontSize = size; };
-                applyFontSize(fontSizeSelect.value);
-
-                const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-                
-                if (!SpeechRecognitionAPI) {
-                    status.innerText = "Error: Browser does not support Speech Recognition.";
-                    status.style.color = "red";
+            editBtn.onclick = () => {
+                if (!isEditing) {
+                    isEditing = true;
+                    editBtn.innerText = "Save";
+                    editBtn.style.background = "#2ecc71";
                     startBtn.disabled = true;
+                    editTextarea.value = history.join('\n');
+                    log.style.display = 'none';
+                    editTextarea.style.display = 'block';
+                    editTextarea.focus();
                 } else {
-                    recognition = new SpeechRecognitionAPI();
-                    recognition.continuous = true;
-                    recognition.interimResults = false;
-                    recognition.lang = langSelect.value;
-
-                    langSelect.onchange = () => { 
-                        recognition.lang = langSelect.value;
-                        const dir = langSelect.value === 'ur-PK' ? 'rtl' : 'ltr';
-                        log.style.direction = dir; editTextarea.style.direction = dir; renderLog();
-                    };
-
-                    fontSizeSelect.onchange = () => applyFontSize(fontSizeSelect.value);
-
-                    recognition.onstart = () => { 
-                        status.innerText = "Listening... (Speak now)"; 
-                        status.style.color = "#2ecc71";
-                        startBtn.classList.add('recording'); startBtn.innerText = "Recording...";
-                    };
-                    
-                    recognition.onend = () => { 
-                        status.innerText = "Stopped."; 
-                        status.style.color = "#777";
-                        startBtn.classList.remove('recording'); startBtn.innerText = "Start";
-                    };
-
-                    recognition.onerror = (event) => {
-                        if (event.error === 'not-allowed') {
-                            alert("Microphone access denied! Allow microphone in App settings.");
-                            status.innerText = "Error: Mic denied.";
-                        }
-                    };
-
-                    recognition.onresult = (event) => {
-                        const text = event.results[event.results.length - 1][0].transcript.trim();
-                        if (text) { history.push(text); redoStack = []; renderLog(); }
-                    };
-
-                    editBtn.onclick = () => {
-                        if (!isEditing) {
-                            isEditing = true; editBtn.innerText = "Save"; editBtn.style.background = "#2ecc71";
-                            startBtn.disabled = true; editTextarea.value = history.join('\n');
-                            log.style.display = 'none'; editTextarea.style.display = 'block'; editTextarea.focus();
-                        } else {
-                            isEditing = false; editBtn.innerText = "Edit"; editBtn.style.background = "#f39c12";
-                            startBtn.disabled = false; const newContent = editTextarea.value.trim();
-                            history = newContent ? newContent.split('\n') : [];
-                            log.style.display = 'block'; editTextarea.style.display = 'none'; renderLog();
-                        }
-                    };
-
-                    undoBtn.onclick = () => { if (history.length > 0) { redoStack.push(history.pop()); renderLog(); } };
-                    redoBtn.onclick = () => { if (redoStack.length > 0) { history.push(redoStack.pop()); renderLog(); } };
-                    clearBtn.onclick = () => { if (confirm("Clear all?")) { history = []; redoStack = []; renderLog(); } };
-                    copyBtn.onclick = () => { navigator.clipboard.writeText(isEditing ? editTextarea.value : history.join('\n')); };
-                    downloadBtn.onclick = () => {
-                        const content = isEditing ? editTextarea.value : history.join('\n');
-                        const blob = new Blob(["\uFEFF" + content], { type: 'text/plain;charset=utf-8' });
-                        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); 
-                        a.download = `voice-log.txt`; a.click();
-                    };
-
-                    function renderLog() {
-                        log.innerHTML = '';
-                        history.forEach(item => {
-                            const div = document.createElement('div'); div.className = 'log-entry'; div.textContent = item;
-                            if(langSelect.value === 'ur-PK') div.style.textAlign = 'right';
-                            log.appendChild(div);
-                        });
-                        log.scrollTop = log.scrollHeight;
-                    }
-
-                    startBtn.onclick = () => { try { recognition.start(); } catch(e) {} };
-                    stopBtn.onclick = () => recognition.stop();
+                    isEditing = false;
+                    editBtn.innerText = "Edit";
+                    editBtn.style.background = "#f39c12";
+                    startBtn.disabled = false;
+                    const newContent = editTextarea.value.trim();
+                    history = newContent ? newContent.split('\n') : [];
+                    log.style.display = 'block';
+                    editTextarea.style.display = 'none';
+                    renderLog();
                 }
+            };
 
-                globalStopSTT = () => { if(recognition) { try{ recognition.stop(); }catch(e){} } };
-            } catch(e) { console.error("STT Error", e); }
-
-
-            // --- TTS LOGIC ---
-            try {
-                const textInput = document.getElementById('tts-text-input');
-                const readingDisplay = document.getElementById('tts-reading-display');
-                const languageSelect = document.getElementById('tts-language-select');
-                const speakBtn = document.getElementById('tts-speak-btn');
-                const stopBtn = document.getElementById('tts-stop-btn');
-                const statusMessage = document.getElementById('tts-status-message');
-                const pitchSlider = document.getElementById('tts-pitch-slider');
-                const rateSlider = document.getElementById('tts-rate-slider');
-                
-                // --- APK AUDIO FIX: Use existing HTML <audio> element ---
-                const globalAudioPlayer = document.getElementById('globalAudioPlayer');
-                let audioQueue = []; 
-                const synth = window.speechSynthesis;
-
-                function setReadingMode(isActive) {
-                    if (isActive) { textInput.style.display = 'none'; readingDisplay.style.display = 'block'; } 
-                    else { textInput.style.display = 'block'; readingDisplay.style.display = 'none'; readingDisplay.innerHTML = ''; }
+            undoBtn.onclick = () => {
+                if (history.length > 0) {
+                    redoStack.push(history.pop());
+                    renderLog();
                 }
+            };
 
-                document.getElementById('tts-open-btn').addEventListener('click', () => document.getElementById('tts-file-input').click());
-                
-                document.getElementById('tts-file-input').addEventListener('change', async (e) => {
-                    const file = e.target.files[0]; if (!file) return;
-                    statusMessage.textContent = `Loading ${file.name}...`;
-                    try {
-                        const fileType = file.name.split('.').pop().toLowerCase();
-                        if (fileType === 'txt') {
-                            const reader = new FileReader(); reader.onload = (e) => { textInput.value = e.target.result; statusMessage.textContent="Ready"; }; reader.readAsText(file);
-                        } else if (fileType === 'pdf') {
-                            const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                            let text = ""; for (let i = 1; i <= pdf.numPages; i++) { const page = await pdf.getPage(i); const content = await page.getTextContent(); text += content.items.map(item => item.str).join(" ") + "\n"; }
-                            textInput.value = text; statusMessage.textContent="Ready";
-                        } else if (fileType === 'docx' || fileType === 'doc') {
-                            const arrayBuffer = await file.arrayBuffer(); const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-                            textInput.value = result.value; statusMessage.textContent="Ready";
-                        }
-                    } catch (error) { statusMessage.textContent = "Error extracting text."; }
-                    e.target.value = ''; 
+            redoBtn.onclick = () => {
+                if (redoStack.length > 0) {
+                    history.push(redoStack.pop());
+                    renderLog();
+                }
+            };
+
+            clearBtn.onclick = () => {
+                if (confirm("Clear all?")) {
+                    history = [];
+                    redoStack = [];
+                    renderLog();
+                }
+            };
+
+            copyBtn.onclick = () => {
+                const content = isEditing ? editTextarea.value : history.join('\n');
+                navigator.clipboard.writeText(content).then(() => {
+                    const oldText = copyBtn.innerText;
+                    copyBtn.innerText = "Done";
+                    setTimeout(() => copyBtn.innerText = oldText, 1000);
                 });
+            };
 
-                document.getElementById('tts-paste-btn').addEventListener('click', async () => { try { textInput.value += await navigator.clipboard.readText(); } catch (err) {} });
-                document.getElementById('tts-clear-btn').addEventListener('click', () => { textInput.value = ''; stopSpeaking(); });
+            downloadBtn.onclick = () => {
+                const content = isEditing ? editTextarea.value : history.join('\n');
+                const BOM = "\uFEFF";
+                const blob = new Blob([BOM + content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `voice-log-${new Date().toLocaleDateString()}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
 
-                function stopSpeaking() {
-                    globalAudioPlayer.pause(); globalAudioPlayer.src = ""; 
-                    audioQueue = []; synth.cancel(); setReadingMode(false); 
-                    statusMessage.textContent = 'Stopped'; speakBtn.disabled = false; stopBtn.disabled = true;
-                }
-
-                stopBtn.addEventListener('click', stopSpeaking);
-                globalStopTTS = stopSpeaking;
-
-                function splitIntoSmartSentences(text) {
-                    let txt = text.replace(/(\d)\.(\d)/g, '$1<DOT>$2').replace(/(\b\d{1,3})\./g, '$1<DOT>').replace(/(\b[a-zA-Z])\./g, '$1<DOT>');
-                    const abbrs = ['mr', 'mrs', 'ms', 'dr', 'prof', 'sr', 'jr', 'st', 'ed', 'ph', 'rs', 'govt', 'ltd', 'inc', 'co'];
-                    txt = txt.replace(new RegExp(`\\b(${abbrs.join('|')})\\.`, 'gi'), '$1<DOT>');
-                    const rawChunks = txt.match(/[^.?!।\n]+[.?!।\n]*/g) || [txt];
-                    let processedChunks = [];
-                    rawChunks.forEach(chunk => {
-                        let cleanChunk = chunk.replace(/<DOT>/g, '.').trim();
-                        if (cleanChunk.length > 0) {
-                            if (cleanChunk.length > 180) {
-                                let tempStr = ''; cleanChunk.split(' ').forEach(word => {
-                                    if ((tempStr + word).length < 170) { tempStr += word + ' '; } else { processedChunks.push(tempStr.trim()); tempStr = word + ' '; }
-                                });
-                                if (tempStr.trim().length > 0) processedChunks.push(tempStr.trim());
-                            } else { processedChunks.push(cleanChunk); }
-                        }
-                    });
-                    return processedChunks;
-                }
-
-                // This handles playing the audio file without errors
-                globalAudioPlayer.onended = () => { setTimeout(playNextChunk, 300); };
-                globalAudioPlayer.onerror = (e) => { 
-                    console.error("Audio Player Error: ", e);
-                    // Only skip to next if we actually had a valid queue
-                    if(audioQueue.length > 0) { setTimeout(playNextChunk, 300); }
-                };
-
-                function playNextChunk() {
-                    if (audioQueue.length === 0) {
-                        statusMessage.textContent = 'Finished reading.';
-                        speakBtn.disabled = false; stopBtn.disabled = true; setTimeout(() => setReadingMode(false), 1500); return;
-                    }
-
-                    const currentItem = audioQueue.shift();
-                    const lang = languageSelect.value;
-                    const engine = document.querySelector('input[name="tts-voice-engine"]:checked').value;
-                    
-                    document.querySelectorAll('#tts-reading-display span').forEach(el => el.classList.remove('highlight-active'));
-                    const activeElement = document.getElementById(currentItem.id);
-                    if (activeElement) {
-                        activeElement.classList.add('highlight-active');
-                        activeElement.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }
-
-                    if (engine === 'google') {
-                        const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${lang}&q=${encodeURIComponent(currentItem.text)}`;
-                        globalAudioPlayer.src = url;
-                        globalAudioPlayer.playbackRate = parseFloat(rateSlider.value);
-                        
-                        statusMessage.textContent = `🔊 Speaking... [${audioQueue.length} chunks left]`;
-                        
-                        globalAudioPlayer.play().catch(e => { 
-                            console.error("Audio Blocked in APK:", e);
-                            statusMessage.textContent = "Audio blocked. Please check App Permissions.";
-                            stopSpeaking(); 
-                        });
-                    } 
-                    else {
-                        const utterance = new SpeechSynthesisUtterance(currentItem.text);
-                        utterance.lang = lang === 'en' ? 'en-US' : lang + '-IN';
-                        utterance.pitch = parseFloat(pitchSlider.value);
-                        utterance.rate = parseFloat(rateSlider.value);
-
-                        utterance.onstart = () => { statusMessage.textContent = `🔊 Speaking Offline...`; };
-                        utterance.onend = () => playNextChunk();
-                        utterance.onerror = (e) => { if(e.error !== 'canceled') playNextChunk(); };
-                        synth.speak(utterance);
-                    }
-                }
-
-                speakBtn.addEventListener('click', () => {
-                    const text = textInput.value.trim();
-                    if (text === '') { alert("Please enter text first."); return; }
-
-                    stopSpeaking(); speakBtn.disabled = true; stopBtn.disabled = false;
-                    
-                    const chunks = splitIntoSmartSentences(text);
-                    audioQueue = []; readingDisplay.innerHTML = ''; setReadingMode(true);
-
-                    chunks.forEach((chunk, index) => {
-                        const spanId = 'tts-phrase-' + index;
-                        const span = document.createElement('span');
-                        span.id = spanId; span.className = 'phrase-chunk'; span.textContent = chunk + ' '; 
-                        readingDisplay.appendChild(span); audioQueue.push({ text: chunk, id: spanId });
-                    });
-
-                    // Bypass Autoplay Restrictions using silent base64 audio
-                    globalAudioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"; 
-                    const playPromise = globalAudioPlayer.play();
-                    
-                    if (playPromise !== undefined) {
-                        playPromise.then(_ => {
-                            playNextChunk(); 
-                        }).catch(error => {
-                            // Even if silent audio fails, try to play the real audio
-                            playNextChunk();
-                        });
-                    } else {
-                        playNextChunk();
-                    }
+            function renderLog() {
+                log.innerHTML = '';
+                history.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'log-entry';
+                    div.textContent = item;
+                    if(langSelect.value === 'ur-PK') div.style.textAlign = 'right';
+                    log.appendChild(div);
                 });
-            } catch(e) { console.error("TTS Error", e); }
-            
-        });
+                log.scrollTop = log.scrollHeight;
+            }
+
+            startBtn.onclick = () => recognition.start();
+            stopBtn.onclick = () => recognition.stop();
+        }
     </script>
 </body>
 </html>
