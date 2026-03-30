@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Logger Pro - Unicode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Voice Logger Pro & Smart Keyboard</title>
     <style>
         :root {
+            /* Speech To Text Colors */
             --primary: #4a90e2;
             --danger: #e74c3c;
             --success: #2ecc71;
@@ -13,7 +14,20 @@
             --secondary: #6c757d;
             --bg: #f1f3f5;
             --accent: #ff5722;
+            
+            /* Keyboard Colors & Fonts */
+            --keyboard-bg: #cfd2d6;
+            --key-bg: #ffffff;
+            --key-hover: #e8eaed;
+            --key-active: #b5b5b5;
+            --text-color: #333;
+            --button-bg: #007bff;
+            --button-hover: #0056b3;
+            --edit-bg: #ff9800;
+            --edit-hover: #e68a00;
+            --addak-font: 'Gurmukhi MN', 'Raavi', sans-serif;
         }
+        
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Raavi", "Mangal", "Lohit Hindi", "Lohit Punjabi", sans-serif; 
             padding: 8px; 
@@ -23,6 +37,7 @@
             flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
+            touch-action: manipulation;
         }
         
         .header-container {
@@ -50,7 +65,7 @@
 
         .controls { 
             display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
+            grid-template-columns: repeat(4, 1fr); 
             gap: 4px; 
             margin-bottom: 6px; 
         }
@@ -63,22 +78,22 @@
             font-weight: 600;
             outline: none;
             transition: background 0.3s ease;
+            cursor: pointer;
         }
 
-        select { background: white; grid-column: span 3; padding: 8px; font-size: 14px; }
+        select { background: white; grid-column: span 4; padding: 8px; font-size: 14px; }
         
-        /* Initial Start Style */
         #startBtn { background: var(--success); color: white; border: none; }
-        /* Recording State Style */
         #startBtn.recording { background: var(--danger) !important; animation: pulse 1.5s infinite; }
-        
         #stopBtn { background: var(--secondary); color: white; border: none; }
         #copyBtn { background: var(--primary); color: white; border: none; }
-        #undoBtn, #redoBtn { background: #adb5bd; color: white; border: none; }
         #clearBtn { background: #343a40; color: white; border: none; }
+        #undoBtn, #redoBtn { background: #adb5bd; color: white; border: none; }
         #editBtn { background: var(--warning); color: white; border: none; }
         #downloadBtn { background: #17a2b8; color: white; border: none; }
-        #fontSizeSelect { grid-column: span 1; padding: 6px; background: #fff; }
+        #fontSizeSelect { grid-column: span 2; padding: 6px; background: #fff; }
+        
+        #kbBtn { background: #9C27B0; color: white; border: none; }
 
         @keyframes pulse {
             0% { opacity: 1; }
@@ -102,6 +117,7 @@
             overflow-y: auto;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
             line-height: 1.4;
+            margin-bottom: 10px;
         }
 
         #editTextarea {
@@ -116,6 +132,218 @@
             border-bottom: 1px solid #f3f3f3;
             padding: 4px 0;
         }
+
+        /* --- Keyboard Styles --- */
+        .keyboard-wrapper {
+            position: relative;
+            padding-bottom: 20px; 
+            display: none; 
+            flex-shrink: 0;
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .keyboard {
+            background-color: var(--keyboard-bg);
+            padding: 10px;
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .keyboard.edit-mode {
+            outline: 3px dashed var(--edit-bg);
+            background-color: #e2e5e9;
+        }
+
+        /* DELETE MODE STYLES */
+        .keyboard.delete-mode {
+            outline: 3px dashed #e74c3c;
+            background-color: #fadbd8;
+        }
+        .keyboard.delete-mode .key:not(.control) {
+            border: 2px solid #e74c3c;
+        }
+        .keyboard.delete-mode .key:not(.control)::before {
+            content: '❌';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            font-size: 14px;
+            background: white;
+            border-radius: 50%;
+            z-index: 10;
+            box-shadow: 0 0 3px rgba(0,0,0,0.5);
+        }
+        .keyboard.delete-mode .key:not(.control):hover {
+            background-color: #f1948a;
+            transform: scale(0.95);
+        }
+
+        .auth-btn {
+            position: absolute;
+            bottom: -15px;
+            right: 10px;
+            background-color: var(--text-color);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            z-index: 10;
+        }
+        .auth-btn:active { transform: scale(0.9); }
+
+        .admin-panel {
+            display: none;
+            justify-content: space-between;
+            margin-top: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .admin-panel .action-btn { flex: 1; min-width: 90px; padding: 10px; color: white; font-weight: bold; border-radius: 5px; }
+        .action-btn.edit-btn { background-color: var(--edit-bg); }
+        .action-btn.delete-btn { background-color: #e74c3c; } /* New Delete Button Color */
+        .action-btn.delete-btn:hover { background-color: #c0392b; }
+        .action-btn.save-btn { background-color: #28a745; }
+        .action-btn.clear-btn { background-color: #dc3545; }
+
+        .credit-text {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 25px;
+            font-family: sans-serif;
+        }
+
+        #main-keys, #symbol-keys {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: gap 0.3s ease;
+        }
+
+        .key-row { display: flex; justify-content: center; gap: 5px; }
+        .row-2 { padding-left: 20px; padding-right: 20px; }
+        .row-3 { padding-left: 10px; padding-right: 10px; }
+
+        .key {
+            background-color: var(--key-bg);
+            border: 1px solid #babbbc;
+            border-bottom-width: 3px;
+            border-radius: 6px;
+            height: 65px; 
+            min-width: 0; 
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none; 
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            color: #111;
+        }
+
+        .key:not(.edit-mode .key):not(.delete-mode .key):hover { background-color: var(--key-hover); }
+        .key:not(.edit-mode .key):not(.delete-mode .key):active {
+            background-color: var(--key-active);
+            border-bottom-width: 1px;
+            transform: translateY(2px);
+        }
+
+        .key .eng { position: absolute; top: 4px; left: 5px; font-size: 12px; color: #777; font-weight: bold; }
+        .key .punj { font-size: 24px; font-weight: 600; margin-top: 8px; font-family: 'Raavi', 'Gurmukhi MN', sans-serif; }
+        .symbol-key .punj { margin-top: 0; font-size: 22px; }
+
+        .key.control { background-color: #abb2bf; font-size: 16px; font-weight: bold; color: #333; }
+        .key.control:active { background-color: #9299a6; }
+        .key.space { flex: 4; } 
+        .key.toggle-btn { flex: 1.5; }
+        .key.enter-btn { flex: 1.5; } 
+        
+        .key.shift-active { background-color: #838a96; color: white; border-bottom-width: 1px; transform: translateY(2px); }
+
+        #key-addak .punj { font-family: var(--addak-font); font-size: 26px; margin-top: 6px; }
+
+        .keyboard.edit-mode .key:not(.control) {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            overflow: visible;
+            border-bottom-width: 1px;
+            cursor: default;
+            height: 85px; 
+        }
+
+        .keyboard.edit-mode #main-keys, .keyboard.edit-mode #symbol-keys { gap: 12px; }
+        .keyboard.edit-mode .key:not(.control) > .eng, .keyboard.edit-mode .key:not(.control) > .punj { display: none; }
+
+        .edit-slot {
+            flex: 1; width: 100%; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-family: 'Raavi', 'Gurmukhi MN', sans-serif; cursor: pointer;
+            box-sizing: border-box; border: 1px dashed transparent;
+        }
+
+        .edit-slot[data-slot="upper"] { background-color: #f1f3f4; border-bottom: 1px solid #ccc; border-radius: 6px 6px 0 0; color: #555; }
+        .edit-slot[data-slot="lower"] { background-color: #fff; font-weight: bold; border-radius: 0 0 6px 6px; }
+        .edit-slot:hover { background-color: #e0e0e0; border-color: #888; }
+        .edit-slot.selected-slot { background-color: #28a745 !important; color: white !important; border: 2px solid #1e7e34; transform: scale(1.05); z-index: 5; }
+
+        .flip-icon {
+            display: none; position: absolute; top: 50%; right: -10px; transform: translateY(-50%);
+            background: #333; color: white; border-radius: 50%; width: 22px; height: 22px;
+            font-size: 12px; line-height: 22px; text-align: center; cursor: pointer; z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .keyboard.edit-mode .flip-icon { display: block; }
+        .flip-icon:active { transform: translateY(-50%) scale(0.9); }
+
+        /* Media Queries Mobile Adjustments */
+        @media (max-width: 650px) {
+            .keyboard-wrapper { margin-top: 20px; }
+            .keyboard { padding: 5px 2px; border-radius: 5px; }
+            #main-keys, #symbol-keys { gap: 4px; }
+            .key-row { gap: 2px; }
+            .row-2 { padding-left: 6px; padding-right: 6px; }
+            .row-3 { padding-left: 0px; padding-right: 0px; }
+            
+            .key { height: 55px; border-radius: 4px; border-bottom-width: 2px; }
+            
+            .keyboard.edit-mode .key:not(.control) { height: 95px; }
+            .key .eng { font-size: 11px; top: 2px; left: 3px; }
+            .key .punj { font-size: 22px; margin-top: 6px; }
+            .symbol-key .punj { font-size: 20px; }
+            .key.control { font-size: 13px; }
+            #key-addak .punj { font-size: 24px; }
+            .edit-slot { font-size: 18px; }
+
+            .keyboard.edit-mode .flip-icon { display: none !important; }
+        }
+
+        @media (max-width: 380px) {
+            .key { height: 50px; }
+            .keyboard.edit-mode .key:not(.control) { height: 85px; }
+            .key .punj { font-size: 18px; }
+            .symbol-key .punj { font-size: 18px; }
+            .key .eng { display: none; } 
+            .key.control { font-size: 11px; }
+        }
     </style>
 </head>
 <body>
@@ -125,7 +353,7 @@
         <div class="attribution">BY-RAJ KAMBOJ 9465428299</div>
     </div>
 
-    <div class="controls">
+    <div class="controls" id="topControls">
         <select id="langSelect">
             <option value="en-US">English</option>
             <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
@@ -136,12 +364,13 @@
         <button id="startBtn">Start</button>
         <button id="stopBtn">Stop</button>
         <button id="copyBtn">Copy</button>
+        <button id="clearBtn">Clear</button>
         
         <button id="undoBtn">Undo</button>
         <button id="redoBtn">Redo</button>
-        <button id="clearBtn">Clear</button>
-
         <button id="editBtn">Edit</button>
+        <button id="kbBtn">KB</button>
+
         <button id="downloadBtn">Save .txt</button>
         <select id="fontSizeSelect">
             <option value="10px">10px</option>
@@ -157,7 +386,120 @@
     <div id="log"></div>
     <textarea id="editTextarea" placeholder="Edit text..."></textarea>
 
+    <div class="keyboard-wrapper" id="keyboardWrapper">
+        <div class="keyboard" id="keyboard">
+            <div id="main-keys">
+                <div class="key-row">
+                    <div class="key" data-lower="ੌ" data-upper="ਔ" data-eng-lower="q" data-eng-upper="Q" onclick="handleKeyClick(this)"><span class="eng">q</span><span class="punj">ੌ</span></div>
+                    <div class="key" data-lower="ੈ" data-upper="ਐ" data-eng-lower="w" data-eng-upper="W" onclick="handleKeyClick(this)"><span class="eng">w</span><span class="punj">ੈ</span></div>
+                    <div class="key" data-lower="ਾ" data-upper="ਆ" data-eng-lower="e" data-eng-upper="E" onclick="handleKeyClick(this)"><span class="eng">e</span><span class="punj">ਾ</span></div>
+                    <div class="key" data-lower="ੀ" data-upper="ਈ" data-eng-lower="r" data-eng-upper="R" onclick="handleKeyClick(this)"><span class="eng">r</span><span class="punj">ੀ</span></div>
+                    <div class="key" data-lower="ੂ" data-upper="ਊ" data-eng-lower="t" data-eng-upper="T" onclick="handleKeyClick(this)"><span class="eng">t</span><span class="punj">ੂ</span></div>
+                    <div class="key" data-lower="ਬ" data-upper="ਭ" data-eng-lower="y" data-eng-upper="Y" onclick="handleKeyClick(this)"><span class="eng">y</span><span class="punj">ਬ</span></div>
+                    <div class="key" data-lower="ਹ" data-upper="ਙ" data-eng-lower="u" data-eng-upper="U" onclick="handleKeyClick(this)"><span class="eng">u</span><span class="punj">ਹ</span></div>
+                    <div class="key" data-lower="ਗ" data-upper="ਘ" data-eng-lower="i" data-eng-upper="I" onclick="handleKeyClick(this)"><span class="eng">i</span><span class="punj">ਗ</span></div>
+                    <div class="key" data-lower="ਦ" data-upper="ਧ" data-eng-lower="o" data-eng-upper="O" onclick="handleKeyClick(this)"><span class="eng">o</span><span class="punj">ਦ</span></div>
+                    <div class="key" data-lower="ਜ" data-upper="ਝ" data-eng-lower="p" data-eng-upper="P" onclick="handleKeyClick(this)"><span class="eng">p</span><span class="punj">ਜ</span></div>
+                    <div class="key" data-lower="ਡ" data-upper="ਢ" data-eng-lower="[" data-eng-upper="{" onclick="handleKeyClick(this)"><span class="eng">[</span><span class="punj">ਡ</span></div>
+                    <div class="key" data-lower="਼" data-upper="ਞ" data-eng-lower="]" data-eng-upper="}" onclick="handleKeyClick(this)"><span class="eng">]</span><span class="punj">਼</span></div>
+                </div>
+                
+                <div class="key-row row-2">
+                    <div class="key" data-lower="ੋ" data-upper="ਓ" data-eng-lower="a" data-eng-upper="A" onclick="handleKeyClick(this)"><span class="eng">a</span><span class="punj">ੋ</span></div>
+                    <div class="key" data-lower="ੇ" data-upper="ਏ" data-eng-lower="s" data-eng-upper="S" onclick="handleKeyClick(this)"><span class="eng">s</span><span class="punj">ੇ</span></div>
+                    <div class="key" data-lower="੍" data-upper="ਅ" data-eng-lower="d" data-eng-upper="D" onclick="handleKeyClick(this)"><span class="eng">d</span><span class="punj">੍</span></div>
+                    <div class="key" data-lower="ਿ" data-upper="ਇ" data-eng-lower="f" data-eng-upper="F" onclick="handleKeyClick(this)"><span class="eng">f</span><span class="punj">ਿ</span></div>
+                    <div class="key" data-lower="ੁ" data-upper="ਉ" data-eng-lower="g" data-eng-upper="G" onclick="handleKeyClick(this)"><span class="eng">g</span><span class="punj">ੁ</span></div>
+                    <div class="key" data-lower="ਪ" data-upper="ਫ" data-eng-lower="h" data-eng-upper="H" onclick="handleKeyClick(this)"><span class="eng">h</span><span class="punj">ਪ</span></div>
+                    <div class="key" data-lower="ਰ" data-upper="ੜ" data-eng-lower="j" data-eng-upper="J" onclick="handleKeyClick(this)"><span class="eng">j</span><span class="punj">ਰ</span></div>
+                    <div class="key" data-lower="ਕ" data-upper="ਖ" data-eng-lower="k" data-eng-upper="K" onclick="handleKeyClick(this)"><span class="eng">k</span><span class="punj">ਕ</span></div>
+                    <div class="key" data-lower="ਤ" data-upper="ਥ" data-eng-lower="l" data-eng-upper="L" onclick="handleKeyClick(this)"><span class="eng">l</span><span class="punj">ਤ</span></div>
+                    <div class="key" data-lower="ਚ" data-upper="ਛ" data-eng-lower=";" data-eng-upper=":" onclick="handleKeyClick(this)"><span class="eng">;</span><span class="punj">ਚ</span></div>
+                    <div class="key" data-lower="ਟ" data-upper="ਠ" data-eng-lower="'" data-eng-upper='"' onclick="handleKeyClick(this)"><span class="eng">'</span><span class="punj">ਟ</span></div>
+                </div>
+
+                <div class="key-row row-3">
+                    <div class="key control shift-btn" style="flex: 1.5;" onclick="toggleShift()">Shift</div>
+                    <div class="key" id="key-addak" data-lower="ੱ" data-upper="ੑ" data-eng-lower="z" data-eng-upper="Z" onclick="handleKeyClick(this)"><span class="eng">z</span><span class="punj">◌ੱ</span></div>
+                    <div class="key" data-lower="ੰ" data-upper="ਂ" data-eng-lower="x" data-eng-upper="X" onclick="handleKeyClick(this)"><span class="eng">x</span><span class="punj">ੰ</span></div>
+                    <div class="key" data-lower="ਮ" data-upper="ਣ" data-eng-lower="c" data-eng-upper="C" onclick="handleKeyClick(this)"><span class="eng">c</span><span class="punj">ਮ</span></div>
+                    <div class="key" data-lower="ਨ" data-upper="ੳ" data-eng-lower="v" data-eng-upper="V" onclick="handleKeyClick(this)"><span class="eng">v</span><span class="punj">ਨ</span></div>
+                    <div class="key" data-lower="ਵ" data-upper="ੲ" data-eng-lower="b" data-eng-upper="B" onclick="handleKeyClick(this)"><span class="eng">b</span><span class="punj">ਵ</span></div>
+                    <div class="key" data-lower="ਲ" data-upper="ਲ਼" data-eng-lower="n" data-eng-upper="N" onclick="handleKeyClick(this)"><span class="eng">n</span><span class="punj">ਲ</span></div>
+                    <div class="key" data-lower="ਸ" data-upper="ਸ਼" data-eng-lower="m" data-eng-upper="M" onclick="handleKeyClick(this)"><span class="eng">m</span><span class="punj">ਸ</span></div>
+                    <div class="key" data-lower="," data-upper="।" data-eng-lower="," data-eng-upper="<" onclick="handleKeyClick(this)"><span class="eng">,</span><span class="punj">,</span></div>
+                    <div class="key" data-lower="." data-upper="॥" data-eng-lower="." data-eng-upper=">" onclick="handleKeyClick(this)"><span class="eng">.</span><span class="punj">.</span></div>
+                    <div class="key" data-lower="ਯ" data-upper="?" data-eng-lower="/" data-eng-upper="?" onclick="handleKeyClick(this)"><span class="eng">/</span><span class="punj">ਯ</span></div>
+                    <div class="key control" style="flex: 1.5; touch-action: none;" onpointerdown="startBackspacePress(event)" onpointerup="endBackspacePress(event)" onpointerleave="endBackspacePress(event)" onpointercancel="endBackspacePress(event)">⌫ Back</div>
+                </div>
+
+                <div class="key-row">
+                    <div class="key control toggle-btn" onclick="toggleVirtualLayout()">?123</div>
+                    <div class="key control space" onclick="insert(' ')">Space</div>
+                    <div class="key control enter-btn" onclick="insert('\n')">↵ Enter</div>
+                </div>
+            </div>
+
+            <div id="symbol-keys" style="display: none;">
+                <div class="key-row">
+                    <div class="key symbol-key" data-lower="1" data-upper="੧" onclick="handleKeyClick(this)"><span class="punj">1</span></div>
+                    <div class="key symbol-key" data-lower="2" data-upper="੨" onclick="handleKeyClick(this)"><span class="punj">2</span></div>
+                    <div class="key symbol-key" data-lower="3" data-upper="੩" onclick="handleKeyClick(this)"><span class="punj">3</span></div>
+                    <div class="key symbol-key" data-lower="4" data-upper="੪" onclick="handleKeyClick(this)"><span class="punj">4</span></div>
+                    <div class="key symbol-key" data-lower="5" data-upper="੫" onclick="handleKeyClick(this)"><span class="punj">5</span></div>
+                    <div class="key symbol-key" data-lower="6" data-upper="੬" onclick="handleKeyClick(this)"><span class="punj">6</span></div>
+                    <div class="key symbol-key" data-lower="7" data-upper="੭" onclick="handleKeyClick(this)"><span class="punj">7</span></div>
+                    <div class="key symbol-key" data-lower="8" data-upper="੮" onclick="handleKeyClick(this)"><span class="punj">8</span></div>
+                    <div class="key symbol-key" data-lower="9" data-upper="੯" onclick="handleKeyClick(this)"><span class="punj">9</span></div>
+                    <div class="key symbol-key" data-lower="0" data-upper="੦" onclick="handleKeyClick(this)"><span class="punj">0</span></div>
+                </div>
+                <div class="key-row row-2">
+                    <div class="key symbol-key" data-lower="@" data-upper="~" onclick="handleKeyClick(this)"><span class="punj">@</span></div>
+                    <div class="key symbol-key" data-lower="#" data-upper="`" onclick="handleKeyClick(this)"><span class="punj">#</span></div>
+                    <div class="key symbol-key" data-lower="$" data-upper="€" onclick="handleKeyClick(this)"><span class="punj">$</span></div>
+                    <div class="key symbol-key" data-lower="%" data-upper="£" onclick="handleKeyClick(this)"><span class="punj">%</span></div>
+                    <div class="key symbol-key" data-lower="&" data-upper="¢" onclick="handleKeyClick(this)"><span class="punj">&</span></div>
+                    <div class="key symbol-key" data-lower="-" data-upper="_" onclick="handleKeyClick(this)"><span class="punj">-</span></div>
+                    <div class="key symbol-key" data-lower="+" data-upper="=" onclick="handleKeyClick(this)"><span class="punj">+</span></div>
+                    <div class="key symbol-key" data-lower="(" data-upper="{" onclick="handleKeyClick(this)"><span class="punj">(</span></div>
+                    <div class="key symbol-key" data-lower=")" data-upper="}" onclick="handleKeyClick(this)"><span class="punj">)</span></div>
+                    <div class="key symbol-key" data-lower="/" data-upper="\" onclick="handleKeyClick(this)"><span class="punj">/</span></div>
+                </div>
+                <div class="key-row row-3">
+                    <div class="key control shift-btn" style="flex: 1.5;" onclick="toggleShift()">Shift</div>
+                    <div class="key symbol-key" data-lower="ੴ" data-upper="☬" onclick="handleKeyClick(this)"><span class="punj" style="font-size: 26px;">ੴ</span></div>
+                    <div class="key symbol-key" data-lower="*" data-upper="^" onclick="handleKeyClick(this)"><span class="punj">*</span></div>
+                    <div class="key symbol-key" data-lower="&quot;" data-upper="|" onclick="handleKeyClick(this)"><span class="punj">"</span></div>
+                    <div class="key symbol-key" data-lower="'" data-upper="°" onclick="handleKeyClick(this)"><span class="punj">'</span></div>
+                    <div class="key symbol-key" data-lower=":" data-upper=";" onclick="handleKeyClick(this)"><span class="punj">:</span></div>
+                    <div class="key symbol-key" data-lower="!" data-upper="¡" onclick="handleKeyClick(this)"><span class="punj">!</span></div>
+                    <div class="key symbol-key" data-lower="?" data-upper="¿" onclick="handleKeyClick(this)"><span class="punj">?</span></div>
+                    <div class="key symbol-key" data-lower="<" data-upper="[" onclick="handleKeyClick(this)"><span class="punj"><</span></div>
+                    <div class="key symbol-key" data-lower=">" data-upper="]" onclick="handleKeyClick(this)"><span class="punj">></span></div>
+                    <div class="key control" style="flex: 1.5; touch-action: none;" onpointerdown="startBackspacePress(event)" onpointerup="endBackspacePress(event)" onpointerleave="endBackspacePress(event)" onpointercancel="endBackspacePress(event)">⌫ Back</div>
+                </div>
+                <div class="key-row">
+                    <div class="key control toggle-btn" onclick="toggleVirtualLayout()">ABC</div>
+                    <div class="key control space" onclick="insert(' ')">Space</div>
+                    <div class="key control enter-btn" onclick="insert('\n')">↵ Enter</div>
+                </div>
+            </div>
+        </div>
+
+        <button id="authBtn" class="auth-btn" onclick="askPassword()">+</button>
+    </div>
+
+    <div id="adminPanel" class="admin-panel">
+        <button id="editModeBtn" class="action-btn edit-btn" onclick="toggleKbEditMode()">✏️ Edit Layout</button>
+        <button id="deleteModeBtn" class="action-btn delete-btn" onclick="toggleDeleteMode()">🗑️ Delete Key</button>
+        <button class="action-btn save-btn" onclick="saveLayout(true)">💾 Save Permanently</button>
+        <button class="action-btn clear-btn" onclick="resetLayout()">🔄 Reset to Default</button>
+    </div>
+
+    <div class="credit-text" id="kbCredit" style="display: none;">made by Raj Kamboj 9465428299</div>
+
     <script>
+        // --- SPEECH TO TEXT LOGIC ---
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
         const undoBtn = document.getElementById('undoBtn');
@@ -166,11 +508,14 @@
         const clearBtn = document.getElementById('clearBtn');
         const editBtn = document.getElementById('editBtn');
         const downloadBtn = document.getElementById('downloadBtn');
+        const kbBtn = document.getElementById('kbBtn');
         const langSelect = document.getElementById('langSelect');
         const fontSizeSelect = document.getElementById('fontSizeSelect');
         const log = document.getElementById('log');
         const editTextarea = document.getElementById('editTextarea');
         const status = document.getElementById('status');
+        const keyboardWrapper = document.getElementById('keyboardWrapper');
+        const kbCredit = document.getElementById('kbCredit');
 
         let history = [];
         let redoStack = [];
@@ -228,7 +573,7 @@
                     isEditing = true;
                     editBtn.innerText = "Save";
                     editBtn.style.background = "#2ecc71";
-                    startBtn.disabled = true;
+                    
                     editTextarea.value = history.join('\n');
                     log.style.display = 'none';
                     editTextarea.style.display = 'block';
@@ -236,8 +581,8 @@
                 } else {
                     isEditing = false;
                     editBtn.innerText = "Edit";
-                    editBtn.style.background = "#f39c12";
-                    startBtn.disabled = false;
+                    editBtn.style.background = "var(--warning)";
+                    
                     const newContent = editTextarea.value.trim();
                     history = newContent ? newContent.split('\n') : [];
                     log.style.display = 'block';
@@ -303,9 +648,387 @@
                 log.scrollTop = log.scrollHeight;
             }
 
-            startBtn.onclick = () => recognition.start();
+            startBtn.onclick = () => {
+                if (isEditing) {
+                    editBtn.click(); 
+                }
+                hideKeyboard(); 
+                try {
+                    recognition.start();
+                } catch(e) {
+                    console.log("Recognition already started or error:", e);
+                }
+            };
+            
             stopBtn.onclick = () => recognition.stop();
         }
+
+        // --- KEYBOARD INTEGRATION LOGIC ---
+
+        function hideKeyboard() {
+            keyboardWrapper.style.display = 'none';
+            kbCredit.style.display = 'none';
+            kbBtn.style.background = '#9C27B0';
+            editTextarea.removeAttribute('inputmode');
+        }
+
+        document.getElementById('topControls').addEventListener('click', (e) => {
+            if ((e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') && e.target.id !== 'kbBtn') {
+                hideKeyboard();
+            }
+        });
+
+        kbBtn.onclick = () => {
+            if (keyboardWrapper.style.display === 'none' || keyboardWrapper.style.display === '') {
+                keyboardWrapper.style.display = 'block';
+                kbCredit.style.display = 'block';
+                kbBtn.style.background = '#28a745'; 
+                editTextarea.setAttribute('inputmode', 'none'); 
+
+                if (!isEditing) editBtn.click();
+                keyboardWrapper.scrollIntoView({ behavior: "smooth" });
+            } else {
+                hideKeyboard();
+            }
+        };
+
+        let isShifted = false;
+        let isKbEditMode = false;
+        let isDeleteMode = false;
+        let selectedSlot = null; 
+
+        document.querySelectorAll('.key').forEach((key, index) => {
+            if (!key.id) key.id = 'vkey-' + index;
+
+            if (!key.classList.contains('control')) {
+                const flipBtn = document.createElement('div');
+                flipBtn.className = 'flip-icon';
+                flipBtn.innerHTML = '🔄';
+                flipBtn.onclick = (e) => handleFlipClick(e, key);
+                key.appendChild(flipBtn);
+            }
+        });
+
+        const keyMap = {
+            'q': 'ੌ', 'w': 'ੈ', 'e': 'ਾ', 'r': 'ੀ', 't': 'ੂ', 'y': 'ਬ', 'u': 'ਹ', 'i': 'ਗ', 'o': 'ਦ', 'p': 'ਜ', '[': 'ਡ', ']': '਼',
+            'Q': 'ਔ', 'W': 'ਐ', 'E': 'ਆ', 'R': 'ਈ', 'T': 'ਊ', 'Y': 'ਭ', 'U': 'ਙ', 'I': 'ਘ', 'O': 'ਧ', 'P': 'ਝ', '{': 'ਢ', '}': 'ਞ',
+            'a': 'ੋ', 's': 'ੇ', 'd': '੍', 'f': 'ਿ', 'g': 'ੁ', 'h': 'ਪ', 'j': 'ਰ', 'k': 'ਕ', 'l': 'ਤ', ';': 'ਚ', "'": 'ਟ',
+            'A': 'ਓ', 'S': 'ਏ', 'D': 'ਅ', 'F': 'ਇ', 'G': 'ਉ', 'H': 'ਫ', 'J': 'ੜ', 'K': 'ਖ', 'L': 'ਥ', ':': 'ਛ', '"': 'ਠ',
+            'z': 'ੱ', 'x': 'ੰ', 'c': 'ਮ', 'v': 'ਨ', 'b': 'ਵ', 'n': 'ਲ', 'm': 'ਸ', ',': ',', '.': '.', '/': 'ਯ',
+            'Z': 'ੑ', 'X': 'ਂ', 'C': 'ਣ', 'V': 'ੳ', 'B': 'ੲ', 'N': 'ਲ਼', 'M': 'ਸ਼', '<': '।', '>': '॥', '?': '?'
+        };
+
+        editTextarea.addEventListener('keydown', function(e) {
+            if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                if (keyMap[e.key]) { e.preventDefault(); insert(keyMap[e.key]); }
+            }
+        });
+
+        document.addEventListener('keydown', function(e) { if (e.key === 'Shift' && !isShifted) toggleShift(); });
+        document.addEventListener('keyup', function(e) { if (e.key === 'Shift' && isShifted) toggleShift(); });
+
+        function insert(char) {
+            if(isKbEditMode || isDeleteMode) return;
+            if (!isEditing) editBtn.click(); 
+
+            const start = editTextarea.selectionStart;
+            const end = editTextarea.selectionEnd;
+            const text = editTextarea.value;
+            editTextarea.value = text.substring(0, start) + char + text.substring(end);
+            editTextarea.selectionStart = editTextarea.selectionEnd = start + char.length;
+            editTextarea.focus();
+        }
+
+        function handleKeyClick(element) {
+            if (isDeleteMode) {
+                if (!element.classList.contains('control')) {
+                    if(confirm("ਕੀ ਤੁਸੀਂ ਇਹ ਬਟਨ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ? (Delete this key?)")) {
+                        element.style.display = 'none'; // Auto grows other buttons via flexbox
+                    }
+                }
+                return;
+            }
+            if (isKbEditMode) return; 
+            
+            const charToInsert = isShifted ? element.getAttribute('data-upper') : element.getAttribute('data-lower');
+            if(charToInsert) insert(charToInsert);
+            if (isShifted) toggleShift();
+        }
+
+        function toggleShift() {
+            if (isKbEditMode || isDeleteMode) return;
+            isShifted = !isShifted;
+            refreshAllKeys();
+            document.querySelectorAll('.shift-btn').forEach(btn => {
+                if (isShifted) btn.classList.add('shift-active');
+                else btn.classList.remove('shift-active');
+            });
+            editTextarea.focus();
+        }
+
+        function toggleVirtualLayout() {
+            if (isKbEditMode || isDeleteMode) return;
+            const mainKeys = document.getElementById('main-keys');
+            const symKeys = document.getElementById('symbol-keys');
+            if (isShifted) toggleShift();
+
+            if (mainKeys.style.display === 'none') {
+                mainKeys.style.display = 'flex';
+                symKeys.style.display = 'none';
+            } else {
+                mainKeys.style.display = 'none';
+                symKeys.style.display = 'flex';
+            }
+            editTextarea.focus();
+        }
+
+        // --- Long Press Backspace Logic ---
+        let backspaceTimer;
+        let isLongPress = false;
+
+        function startBackspacePress(e) {
+            if (isKbEditMode || isDeleteMode) return;
+            isLongPress = false;
+            backspaceTimer = setTimeout(() => {
+                isLongPress = true;
+                deleteWholeLine();
+            }, 600); // 600ms = Long Press
+        }
+
+        function endBackspacePress(e) {
+            clearTimeout(backspaceTimer);
+            if (e.type === 'pointerleave' || e.type === 'pointercancel') return;
+            if (!isLongPress && e.type === 'pointerup') {
+                virtualBackspace();
+            }
+        }
+
+        function virtualBackspace() {
+            if (!isEditing) return;
+            const start = editTextarea.selectionStart;
+            const end = editTextarea.selectionEnd;
+            const text = editTextarea.value;
+
+            if (start === end && start > 0) {
+                editTextarea.value = text.substring(0, start - 1) + text.substring(end);
+                editTextarea.selectionStart = editTextarea.selectionEnd = start - 1;
+            } else if (start !== end) {
+                editTextarea.value = text.substring(0, start) + text.substring(end);
+                editTextarea.selectionStart = editTextarea.selectionEnd = start;
+            }
+            editTextarea.focus();
+        }
+
+        function deleteWholeLine() {
+            if (!isEditing) editBtn.click();
+            const text = editTextarea.value;
+            const pos = editTextarea.selectionStart;
+            
+            let lineStart = text.lastIndexOf('\n', pos - 1);
+            lineStart = lineStart === -1 ? 0 : lineStart + 1;
+            
+            editTextarea.value = text.substring(0, lineStart) + text.substring(pos);
+            editTextarea.selectionStart = editTextarea.selectionEnd = lineStart;
+            editTextarea.focus();
+        }
+
+        function askPassword() {
+            let pwd = prompt("ਕਿਰਪਾ ਕਰਕੇ ਪਾਸਵਰਡ ਭਰੋ (Enter Password):");
+            if (pwd === "2005") {
+                document.getElementById('adminPanel').style.display = 'flex';
+                document.getElementById('authBtn').style.display = 'none';
+            } else if (pwd !== null) {
+                alert("ਗਲਤ ਪਾਸਵਰਡ! (Wrong Password!)");
+            }
+        }
+
+        // --- NEW DELETE MODE ---
+        function toggleDeleteMode() {
+            if (isKbEditMode) toggleKbEditMode(); // Turn off edit mode if on
+
+            isDeleteMode = !isDeleteMode;
+            const kb = document.getElementById('keyboard');
+            const delBtn = document.getElementById('deleteModeBtn');
+
+            if (isDeleteMode) {
+                kb.classList.add('delete-mode');
+                delBtn.innerHTML = "✅ Stop Deleting";
+                delBtn.style.backgroundColor = "#c0392b";
+            } else {
+                kb.classList.remove('delete-mode');
+                delBtn.innerHTML = "🗑️ Delete Key";
+                delBtn.style.backgroundColor = "#e74c3c";
+            }
+        }
+
+        function toggleKbEditMode() {
+            if (isDeleteMode) toggleDeleteMode(); // Turn off delete mode if on
+
+            isKbEditMode = !isKbEditMode;
+            const kb = document.getElementById('keyboard');
+            const editBtn = document.getElementById('editModeBtn');
+
+            if (isKbEditMode) {
+                kb.classList.add('edit-mode');
+                editBtn.innerHTML = "✅ Stop Editing";
+                editBtn.style.backgroundColor = "#17a2b8"; 
+                
+                document.querySelectorAll('.key:not(.control)').forEach(key => {
+                    const upperChar = key.getAttribute('data-upper') || '';
+                    const lowerChar = key.getAttribute('data-lower') || '';
+
+                    const upperSlot = document.createElement('div');
+                    upperSlot.className = 'edit-slot';
+                    upperSlot.dataset.slot = 'upper';
+                    upperSlot.textContent = upperChar;
+                    upperSlot.onclick = (e) => handleSlotClick(e, upperSlot);
+
+                    const lowerSlot = document.createElement('div');
+                    lowerSlot.className = 'edit-slot';
+                    lowerSlot.dataset.slot = 'lower';
+                    lowerSlot.textContent = lowerChar;
+                    lowerSlot.onclick = (e) => handleSlotClick(e, lowerSlot);
+
+                    key.insertBefore(upperSlot, key.firstChild);
+                    key.appendChild(lowerSlot);
+                });
+            } else {
+                kb.classList.remove('edit-mode');
+                editBtn.innerHTML = "✏️ Edit Layout";
+                editBtn.style.backgroundColor = "var(--edit-bg)";
+                
+                if (selectedSlot) {
+                    selectedSlot.classList.remove('selected-slot');
+                    selectedSlot = null;
+                }
+
+                document.querySelectorAll('.key:not(.control)').forEach(key => {
+                    key.querySelectorAll('.edit-slot').forEach(slot => slot.remove());
+                });
+                
+                refreshAllKeys();
+            }
+        }
+
+        function handleSlotClick(e, clickedSlot) {
+            e.stopPropagation();
+            if (!selectedSlot) {
+                selectedSlot = clickedSlot;
+                selectedSlot.classList.add('selected-slot');
+            } else if (selectedSlot === clickedSlot) {
+                selectedSlot.classList.remove('selected-slot');
+                selectedSlot = null;
+            } else {
+                const sourceKey = selectedSlot.closest('.key');
+                const targetKey = clickedSlot.closest('.key');
+                
+                const sourceAttr = selectedSlot.dataset.slot === 'upper' ? 'data-upper' : 'data-lower';
+                const targetAttr = clickedSlot.dataset.slot === 'upper' ? 'data-upper' : 'data-lower';
+
+                const sourceChar = sourceKey.getAttribute(sourceAttr);
+                const targetChar = targetKey.getAttribute(targetAttr);
+
+                sourceKey.setAttribute(sourceAttr, targetChar);
+                targetKey.setAttribute(targetAttr, sourceChar);
+
+                selectedSlot.textContent = targetChar;
+                clickedSlot.textContent = sourceChar;
+
+                selectedSlot.classList.remove('selected-slot');
+                selectedSlot = null;
+            }
+        }
+
+        function handleFlipClick(e, key) {
+            e.stopPropagation();
+            const lower = key.getAttribute('data-lower');
+            const upper = key.getAttribute('data-upper');
+            
+            key.setAttribute('data-lower', upper);
+            key.setAttribute('data-upper', lower);
+
+            if (isKbEditMode) {
+                const upperSlot = key.querySelector('.edit-slot[data-slot="upper"]');
+                const lowerSlot = key.querySelector('.edit-slot[data-slot="lower"]');
+                if (upperSlot && lowerSlot) {
+                    upperSlot.textContent = lower;
+                    lowerSlot.textContent = upper;
+                }
+            }
+        }
+
+        function refreshAllKeys() {
+            document.querySelectorAll('.key:not(.control)').forEach(key => {
+                const engSpan = key.querySelector('.eng');
+                const punjSpan = key.querySelector('.punj');
+                
+                if (isShifted) {
+                    if(engSpan && key.getAttribute('data-eng-upper')) engSpan.textContent = key.getAttribute('data-eng-upper');
+                    punjSpan.textContent = key.getAttribute('data-upper');
+                } else {
+                    if(engSpan && key.getAttribute('data-eng-lower')) engSpan.textContent = key.getAttribute('data-eng-lower');
+                    
+                    if (key.id === 'key-addak') {
+                        punjSpan.textContent = '◌' + key.getAttribute('data-lower');
+                    } else {
+                        punjSpan.textContent = key.getAttribute('data-lower');
+                    }
+                }
+            });
+        }
+
+        function saveLayout(showAlert = false) {
+            if (isKbEditMode) toggleKbEditMode();
+            if (isDeleteMode) toggleDeleteMode();
+
+            const layoutData = {};
+            document.querySelectorAll('.key:not(.control)').forEach(key => {
+                layoutData[key.id] = {
+                    lower: key.getAttribute('data-lower'),
+                    upper: key.getAttribute('data-upper'),
+                    deleted: key.style.display === 'none' // Save if key was deleted
+                };
+            });
+            localStorage.setItem('gurmukhiCharLayout', JSON.stringify(layoutData));
+            
+            if(showAlert) {
+                alert("ਕੀਬੋਰਡ ਲੇਆਉਟ ਪੱਕੇ ਤੌਰ 'ਤੇ ਸੇਵ ਹੋ ਗਿਆ ਹੈ! (Layout Saved Permanently!)");
+                document.getElementById('adminPanel').style.display = 'none';
+                document.getElementById('authBtn').style.display = 'flex';
+            }
+        }
+
+        function loadLayout() {
+            const savedData = localStorage.getItem('gurmukhiCharLayout');
+            if (!savedData) return; 
+
+            try {
+                const layoutData = JSON.parse(savedData);
+                for (const keyId in layoutData) {
+                    const key = document.getElementById(keyId);
+                    if (key) {
+                        key.setAttribute('data-lower', layoutData[keyId].lower);
+                        key.setAttribute('data-upper', layoutData[keyId].upper);
+                        // Check if key was previously deleted
+                        if (layoutData[keyId].deleted) {
+                            key.style.display = 'none';
+                        }
+                    }
+                }
+                refreshAllKeys();
+            } catch(e) {
+                console.error("Failed to load layout", e);
+            }
+        }
+
+        function resetLayout() {
+            if(confirm("ਕੀ ਤੁਸੀਂ ਸਾਰੇ ਅੱਖਰਾਂ ਨੂੰ ਪੁਰਾਣੀ ਸੈਟਿੰਗ 'ਤੇ ਰੀਸੈੱਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ? (Reset to default?)")) {
+                localStorage.removeItem('gurmukhiCharLayout');
+                location.reload(); 
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadLayout);
     </script>
 </body>
 </html>
